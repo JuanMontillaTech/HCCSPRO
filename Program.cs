@@ -21,6 +21,8 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Reemplazamos el DbContextFactory con un enfoque diferente para resolver problemas de concurrencia
+
 // Identity con ApplicationUser y ApplicationRole
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
 {

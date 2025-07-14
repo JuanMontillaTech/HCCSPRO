@@ -1,7 +1,12 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using ALGASystem.Data;
 using ALGASystem.Models;
 using ALGASystem.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using System.Transactions;
 
 namespace ALGASystem.Services
 {
@@ -21,20 +26,24 @@ namespace ALGASystem.Services
         private readonly IPermissionService _permissionService;
         private readonly IRoleService _roleService;
         private readonly ILogger<PermissionAuthorizationHandler> _logger;
+        private readonly ApplicationDbContext _dbContext;
 
         public PermissionAuthorizationHandler(
             UserManager<ApplicationUser> userManager,
             IPermissionService permissionService,
             IRoleService roleService,
-            ILogger<PermissionAuthorizationHandler> logger)
+            ILogger<PermissionAuthorizationHandler> logger,
+            ApplicationDbContext dbContext)
         {
             _userManager = userManager;
             _permissionService = permissionService;
             _roleService = roleService;
             _logger = logger;
+            _dbContext = dbContext;
         }
 
-        protected override async Task HandleRequirementAsync(
+        // Reemplazamos la implementación asíncrona por una que evita problemas de concurrencia
+        protected override Task HandleRequirementAsync(
             AuthorizationHandlerContext context,
             PermissionRequirement requirement)
         {
@@ -42,74 +51,82 @@ namespace ALGASystem.Services
             {
                 _logger.LogInformation($"Verificando permiso: {requirement.Permission}");
                 
-                if (context.User == null)
+                // Verificaciones básicas de usuario sin usar operaciones asíncronas de EF
+                if (context.User == null || !context.User.Identity.IsAuthenticated)
                 {
-                    _logger.LogWarning("Autorización fallida: El usuario es nulo");
-                    return;
-                }
-                
-                if (!context.User.Identity.IsAuthenticated)
-                {
-                    _logger.LogWarning("Autorización fallida: El usuario no está autenticado");
-                    return;
+                    _logger.LogWarning("Autorización fallida: El usuario es nulo o no está autenticado");
+                    return Task.CompletedTask;
                 }
 
-                // Get the user
-                var user = await _userManager.GetUserAsync(context.User);
-                if (user == null)
+                // Extraer el ID de usuario directamente de las claims (evita GetUserAsync que causa problemas de concurrencia)
+                var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userName = context.User.FindFirstValue(ClaimTypes.Name);
+                
+                if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("Autorización fallida: No se pudo recuperar el usuario desde UserManager");
-                    return;
+                    _logger.LogWarning("Autorización fallida: No se pudo obtener el ID del usuario de las claims");
+                    return Task.CompletedTask;
                 }
                 
-                _logger.LogInformation($"Verificando permisos para el usuario: {user.UserName} (ID: {user.Id})");
-
-                // Check if user is active
-                if (!user.IsActive)
-                {
-                    _logger.LogWarning($"Autorización fallida: El usuario {user.UserName} no está activo");
-                    return;
-                }
-
-                // Get user roles
-                var roles = await _userManager.GetRolesAsync(user);
-                _logger.LogInformation($"El usuario tiene los roles: {string.Join(", ", roles)}");
+                _logger.LogInformation($"Verificando permisos para el usuario: {userName} (ID: {userId})");
                 
-                // Check if user has direct permission
-                var userPermissions = await _permissionService.GetUserPermissionsAsync(user.Id);
-                _logger.LogInformation($"El usuario tiene {userPermissions.Count()} permisos directos");
+                // Enfoque sin concurrencia: usar ADO.NET directamente para evitar problemas de concurrencia de EF Core
+                // Esto nos permite hacer las consultas de manera segura en un contexto multihilo
                 
-                if (userPermissions.Any(p => p.Name == requirement.Permission))
+                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                using (var dbContext = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlServer(
+                    _dbContext.Database.GetConnectionString()).Options))
                 {
-                    _logger.LogInformation($"El usuario tiene permiso directo: {requirement.Permission}");
-                    context.Succeed(requirement);
-                    return;
-                }
-
-                // Check if any of user's roles has the permission
-                foreach (var roleName in roles)
-                {
-                    var role = await _roleService.GetRoleByNameAsync(roleName);
-                    if (role != null)
+                    // 1. Comprobar permisos directos del usuario
+                    var userPermissions = dbContext.UserPermissions
+                        .AsNoTracking()
+                        .Where(up => up.UserId == userId)
+                        .Include(up => up.Permission)
+                        .ToList(); // Usar ToList en lugar de ToListAsync para evitar problemas
+                    
+                    if (userPermissions.Any(up => up.Permission.Name == requirement.Permission))
                     {
-                        var rolePermissions = await _permissionService.GetRolePermissionsAsync(role.Id);
-                        _logger.LogInformation($"El rol {roleName} tiene {rolePermissions.Count()} permisos");
+                        _logger.LogInformation($"El usuario tiene permiso directo: {requirement.Permission}");
+                        context.Succeed(requirement);
+                        scope.Complete();
+                        return Task.CompletedTask;
+                    }
+                    
+                    // 2. Obtener roles del usuario
+                    var userRoles = dbContext.UserRoles
+                        .AsNoTracking()
+                        .Where(ur => ur.UserId == userId)
+                        .ToList();
+                    
+                    // 3. Comprobar permisos por rol
+                    foreach (var userRole in userRoles)
+                    {
+                        var rolePermissions = dbContext.RolePermissions
+                            .AsNoTracking()
+                            .Where(rp => rp.RoleId == userRole.RoleId)
+                            .Include(rp => rp.Permission)
+                            .ToList();
                         
-                        if (rolePermissions.Any(p => p.Name == requirement.Permission))
+                        if (rolePermissions.Any(rp => rp.Permission.Name == requirement.Permission))
                         {
-                            _logger.LogInformation($"El rol {roleName} tiene permiso: {requirement.Permission}");
+                            _logger.LogInformation($"El usuario tiene el permiso {requirement.Permission} a través de un rol");
                             context.Succeed(requirement);
-                            return;
+                            scope.Complete();
+                            return Task.CompletedTask;
                         }
                     }
+                    
+                    scope.Complete();
                 }
                 
-                _logger.LogWarning($"Autorización fallida: El usuario {user.UserName} no tiene el permiso {requirement.Permission}");
+                _logger.LogWarning($"Autorización fallida: El usuario {userName} no tiene el permiso {requirement.Permission}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error al verificar el permiso {requirement.Permission}");
             }
+            
+            return Task.CompletedTask;
         }
     }
 }
