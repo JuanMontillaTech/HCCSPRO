@@ -3,6 +3,7 @@
 @inject IUserService UserService
 @inject IRoleService RoleService
 @inject IPermissionService PermissionService
+@inject ICompanyService CompanyService
 
 <PageTitle>Tablero - ALGA System</PageTitle>
 
@@ -53,6 +54,21 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-4 mt-4">
+                <div class="outlook-card">
+                    <div class="outlook-card-header">
+                        <h4>Empresas</h4>
+                    </div>
+                    <div class="outlook-card-body text-center">
+                        <h2>@_companyCount</h2>
+                        <p>Total Empresas</p>
+                        <div class="d-flex justify-content-around">
+                            <a href="companies" class="outlook-btn outlook-btn-primary">Ver Empresas</a>
+                            <a href="companies/create" class="outlook-btn outlook-btn-success">Nueva Empresa</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -88,19 +104,24 @@
     private int _userCount;
     private int _roleCount;
     private int _permissionCount;
+    private int _companyCount;
     private List<RecentActivity> _recentActivities = new List<RecentActivity>();
 
     protected override async Task OnInitializedAsync()
     {
-        // In a real application, these would be actual counts from the database
+        // Obtenemos los conteos de usuarios, roles y permisos
         var users = await UserService.GetAllUsersAsync();
         _userCount = users.Count();
-
+        
         var roles = await RoleService.GetAllRolesAsync();
         _roleCount = roles.Count();
-
+        
         var permissions = await PermissionService.GetAllPermissionsAsync();
         _permissionCount = permissions.Count();
+        
+        // Obtenemos el conteo de empresas
+        var companies = await CompanyService.GetAllCompaniesAsync(includeInactive: true);
+        _companyCount = companies.Count();
 
         // Sample data for recent activities
         _recentActivities = new List<RecentActivity>

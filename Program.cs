@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
@@ -63,6 +63,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 // Handler para políticas por permiso
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
@@ -94,6 +95,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("ViewSettings", policy => policy.Requirements.Add(new PermissionRequirement("View Settings")));
     options.AddPolicy("EditSettings", policy => policy.Requirements.Add(new PermissionRequirement("Edit Settings")));
     options.AddPolicy("ManageBackup", policy => policy.Requirements.Add(new PermissionRequirement("Manage Backup")));
+
+    // Políticas para el módulo de empresas
+    options.AddPolicy("ViewCompanies", policy => policy.Requirements.Add(new PermissionRequirement("View Companies")));
+    options.AddPolicy("CreateCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Create Companies")));
+    options.AddPolicy("EditCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Edit Companies")));
+    options.AddPolicy("DeleteCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Delete Companies")));
 });
 
 // HttpClient

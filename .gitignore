@@ -48,6 +48,8 @@ launchSettings.json
 # Logs y datos de usuario
 *.log
 logs/
+bin/
+obj/
 Log/
 Logs/
 wwwroot/logs/

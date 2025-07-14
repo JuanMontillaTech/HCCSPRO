@@ -1,0 +1,221 @@
+@page "/companies"
+@attribute [Authorize(Policy = "ViewCompanies")]
+@inject ICompanyService CompanyService
+@inject NavigationManager NavigationManager
+@inject ILogger<Index> Logger
+
+<PageTitle>Empresas - Hermanas de la caridad del cardenal sancha</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Gestión de Empresas</h3>
+        <div>
+            @if (_isLoading)
+            {
+                <button class="outlook-btn outlook-btn-secondary" disabled>
+                    <i class="oi oi-reload spin"></i> Cargando...
+                </button>
+            }
+            else
+            {
+                <button class="outlook-btn outlook-btn-secondary" @onclick="LoadCompanies">
+                    <i class="oi oi-reload"></i> Actualizar
+                </button>
+            }
+            <AuthorizeView Policy="CreateCompanies">
+                <Authorized>
+                    <button class="outlook-btn outlook-btn-primary" @onclick="() => NavigateToForm()">
+                        <i class="oi oi-plus"></i> Nueva Empresa
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_isLoading)
+        {
+            <div class="text-center p-3">
+                <i class="oi oi-reload spin"></i> Cargando empresas...
+            </div>
+        }
+        else if (_companies == null || !_companies.Any())
+        {
+            <div class="alert alert-info">
+                No hay empresas registradas en el sistema.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="outlook-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>RNC/NIT</th>
+                            <th>Teléfono</th>
+                            <th>Fecha de Creación</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var company in _companies)
+                        {
+                            <tr class="@(company.IsActive ? "" : "table-secondary")">
+                                <td>@company.Name</td>
+                                <td>@(string.IsNullOrEmpty(company.TaxNumber) ? "-" : company.TaxNumber)</td>
+                                <td>@(string.IsNullOrEmpty(company.Phone) ? "-" : company.Phone)</td>
+                                <td>@company.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <span class="badge @(company.IsActive ? "bg-success" : "bg-secondary")">
+                                        @(company.IsActive ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <AuthorizeView Policy="ViewCompanies">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-secondary" 
+                                                    @onclick="() => NavigateToDetail(company.Id)">
+                                                    <i class="oi oi-eye"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="EditCompanies">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-primary" 
+                                                    @onclick="() => NavigateToForm(company.Id)">
+                                                    <i class="oi oi-pencil"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="DeleteCompanies">
+                                            <Authorized>
+                                                <button class="outlook-btn @(company.IsActive ? "outlook-btn-danger" : "outlook-btn-success")" 
+                                                    @onclick="() => ConfirmStatusChange(company)">
+                                                    <i class="oi @(company.IsActive ? "oi-ban" : "oi-check")"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@if (_showConfirmDialog)
+{
+    <div class="modal fade show" tabindex="-1" style="display:block; background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content outlook-card">
+                <div class="modal-header outlook-card-header">
+                    <h5 class="modal-title">@_confirmTitle</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showConfirmDialog = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@_confirmMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="() => _showConfirmDialog = false">Cancelar</button>
+                    <button type="button" class="outlook-btn @(_selectedCompany?.IsActive == true ? "outlook-btn-danger" : "outlook-btn-success")" 
+                        @onclick="ConfirmStatusChangeAction">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Company> _companies;
+    private bool _isLoading = true;
+    private bool _showConfirmDialog = false;
+    private Company _selectedCompany;
+    private string _confirmTitle;
+    private string _confirmMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCompanies();
+    }
+
+    private async Task LoadCompanies()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var result = await CompanyService.GetAllCompaniesAsync(includeInactive: true);
+            _companies = result.ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cargar la lista de empresas");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToForm(Guid? id = null)
+    {
+        if (id.HasValue)
+        {
+            NavigationManager.NavigateTo($"/companies/edit/{id}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/companies/create");
+        }
+    }
+
+    private void NavigateToDetail(Guid id)
+    {
+        NavigationManager.NavigateTo($"/companies/detail/{id}");
+    }
+
+    private void ConfirmStatusChange(Company company)
+    {
+        _selectedCompany = company;
+        
+        if (company.IsActive)
+        {
+            _confirmTitle = "Desactivar Empresa";
+            _confirmMessage = $"¿Está seguro que desea desactivar la empresa '{company.Name}'? La empresa no será eliminada, solo cambiará su estado a inactivo.";
+        }
+        else
+        {
+            _confirmTitle = "Activar Empresa";
+            _confirmMessage = $"¿Está seguro que desea activar la empresa '{company.Name}'?";
+        }
+
+        _showConfirmDialog = true;
+    }
+
+    private async Task ConfirmStatusChangeAction()
+    {
+        try
+        {
+            if (_selectedCompany != null)
+            {
+                bool newStatus = !_selectedCompany.IsActive;
+                await CompanyService.ToggleCompanyStatusAsync(_selectedCompany.Id, newStatus);
+                await LoadCompanies();
+                _showConfirmDialog = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cambiar el estado de la empresa");
+        }
+    }
+}

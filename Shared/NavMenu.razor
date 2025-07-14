@@ -11,32 +11,36 @@
 
     <div class="@NavMenuCssClass">
         <div class="outlook-nav-section">
-            <div class="outlook-nav-section-header">Main</div>
+            <div class="outlook-nav-section-header">Inicio</div>
             <NavLink class="outlook-nav-item" href="" Match="NavLinkMatch.All">
                 <i class="oi oi-dashboard"></i> Dashboard
             </NavLink>
-            <NavLink class="outlook-nav-item" href="users">
-                <i class="oi oi-people"></i> Users
-            </NavLink>
+            
         </div>
 
         <div class="outlook-nav-section">
-            <div class="outlook-nav-section-header">Administration</div>
+            <NavLink class="outlook-nav-item" href="users">
+                <i class="oi oi-people"></i> Usuarios
+            </NavLink>
+            <div class="outlook-nav-section-header">Seguridad</div>
             <NavLink class="outlook-nav-item" href="roles">
                 <i class="oi oi-badge"></i> Roles
             </NavLink>
             <NavLink class="outlook-nav-item" href="permissions">
-                <i class="oi oi-lock-locked"></i> Permissions
+                <i class="oi oi-lock-locked"></i> Permisos
+            </NavLink>
+            <NavLink class="outlook-nav-item" href="companies">
+                <i class="oi oi-briefcase"></i> Empresas
             </NavLink>
         </div>
 
         <div class="outlook-nav-section">
-            <div class="outlook-nav-section-header">Settings</div>
+            <div class="outlook-nav-section-header">Configuración</div>
             <NavLink class="outlook-nav-item" href="profile">
-                <i class="oi oi-person"></i> Profile
+                <i class="oi oi-person"></i> Perfil
             </NavLink>
             <NavLink class="outlook-nav-item" href="settings">
-                <i class="oi oi-cog"></i> Settings
+                <i class="oi oi-cog"></i> Configuración
             </NavLink>
         </div>
     </div>

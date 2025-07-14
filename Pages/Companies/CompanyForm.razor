@@ -1,0 +1,213 @@
+@page "/companies/create"
+@page "/companies/edit/{Id:guid}"
+@attribute [Authorize(Policy = "CreateCompanies")]
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ICompanyService CompanyService
+@inject NavigationManager NavigationManager
+@inject ILogger<CompanyForm> Logger
+
+<PageTitle>@(_isNew ? "Nueva Empresa" : "Editar Empresa") - Hermanas de la caridad del cardenal sancha</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>@(_isNew ? "Nueva Empresa" : "Editar Empresa")</h3>
+        <div>
+            <button class="outlook-btn outlook-btn-secondary" @onclick="NavigateBack">
+                <i class="oi oi-arrow-left"></i> Volver
+            </button>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_isLoading)
+        {
+            <div class="text-center p-3">
+                <i class="oi oi-reload spin"></i> Cargando...
+            </div>
+        }
+        else
+        {
+            <EditForm Model="@_company" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="alert alert-danger" />
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error:</strong> @_errorMessage
+                        <button type="button" class="btn-close" @onclick="() => _errorMessage = null"></button>
+                    </div>
+                }
+
+                <div class="form-group mb-3">
+                    <label for="name">Nombre de la Empresa <span class="text-danger">*</span></label>
+                    <InputText id="name" @bind-Value="_company.Name" class="form-control" />
+                    <ValidationMessage For="@(() => _company.Name)" class="text-danger" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="taxNumber">RNC/NIT</label>
+                    <InputText id="taxNumber" @bind-Value="_company.TaxNumber" class="form-control" />
+                    <ValidationMessage For="@(() => _company.TaxNumber)" class="text-danger" />
+                    <small class="form-text text-muted">Si corresponde, ingrese el número de identificación fiscal de la empresa.</small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="address">Dirección</label>
+                    <InputTextArea id="address" @bind-Value="_company.Address" class="form-control" rows="3" />
+                    <ValidationMessage For="@(() => _company.Address)" class="text-danger" />
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="phone">Teléfono</label>
+                    <InputText id="phone" @bind-Value="_company.Phone" class="form-control" />
+                    <ValidationMessage For="@(() => _company.Phone)" class="text-danger" />
+                </div>
+
+                @if (!_isNew)
+                {
+                    <div class="form-group mb-3">
+                        <label for="isActive">Estado</label>
+                        <div class="form-check form-switch">
+                            <InputCheckbox id="isActive" @bind-Value="_company.IsActive" class="form-check-input" />
+                            <label class="form-check-label" for="isActive">
+                                @(_company.IsActive ? "Activo" : "Inactivo")
+                            </label>
+                        </div>
+                    </div>
+                }
+
+                <div class="form-group mt-4">
+                    <button type="submit" class="outlook-btn outlook-btn-primary" disabled="@_isSaving">
+                        @if (_isSaving)
+                        {
+                            <i class="oi oi-reload spin"></i>
+                            <span> Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="oi oi-check"></i>
+                            <span> Guardar</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private Company _company = new Company();
+    private bool _isLoading = true;
+    private bool _isSaving = false;
+    private bool _isNew => Id == null;
+    private string _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            
+            if (!_isNew && Id.HasValue)
+            {
+                var company = await CompanyService.GetCompanyByIdAsync(Id.Value);
+                if (company == null)
+                {
+                    Logger.LogWarning("Intento de editar una empresa inexistente. ID: {CompanyId}", Id);
+                    NavigateBack();
+                    return;
+                }
+                
+                _company = company;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cargar los datos de la empresa");
+            _errorMessage = "Ha ocurrido un error al cargar los datos de la empresa.";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            _errorMessage = null;
+            _isSaving = true;
+
+            bool success;
+            
+            // Validación personalizada para nombre con solo espacios
+            if (string.IsNullOrWhiteSpace(_company.Name) || _company.Name.Trim().Length == 0)
+            {
+                _errorMessage = "El nombre de la empresa no puede estar vacío o contener solo espacios.";
+                _isSaving = false;
+                return;
+            }
+            
+            // Validación de RNC/NIT único
+            if (!string.IsNullOrWhiteSpace(_company.TaxNumber))
+            {
+                bool isTaxNumberUnique = await CompanyService.IsTaxNumberUniqueAsync(
+                    _company.TaxNumber, 
+                    _isNew ? null : _company.Id);
+                
+                if (!isTaxNumberUnique)
+                {
+                    _errorMessage = "Ya existe otra empresa con el mismo RNC/NIT registrado.";
+                    _isSaving = false;
+                    return;
+                }
+            }
+
+            if (_isNew)
+            {
+                success = await CompanyService.CreateCompanyAsync(_company);
+                if (success)
+                {
+                    Logger.LogInformation("Empresa creada con éxito: {CompanyName}", _company.Name);
+                    NavigationManager.NavigateTo("/companies");
+                }
+                else
+                {
+                    _errorMessage = "No se pudo crear la empresa. Por favor, verifique los datos e intente nuevamente.";
+                }
+            }
+            else
+            {
+                success = await CompanyService.UpdateCompanyAsync(_company);
+                if (success)
+                {
+                    Logger.LogInformation("Empresa actualizada con éxito: {CompanyName}, ID: {CompanyId}", _company.Name, _company.Id);
+                    NavigationManager.NavigateTo("/companies");
+                }
+                else
+                {
+                    _errorMessage = "No se pudo actualizar la empresa. Por favor, verifique los datos e intente nuevamente.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al guardar la empresa");
+            _errorMessage = "Ha ocurrido un error al guardar los datos de la empresa.";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/companies");
+    }
+}
