@@ -1,0 +1,108 @@
+# Archivos y carpetas específicos de .NET Core
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+*.jfm
+*.pfx
+*.publishsettings
+
+# Carpetas de publicación y compilación
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]uild/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Archivos de Visual Studio y VS Code
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.sln.docstates
+
+# Archivos de configuración sensibles
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+*.Development.json
+launchSettings.json
+
+# Logs y datos de usuario
+*.log
+logs/
+Log/
+Logs/
+wwwroot/logs/
+
+# Carpetas de dependencias
+node_modules/
+bower_components/
+jspm_packages/
+package-lock.json
+yarn.lock
+
+# Archivos de caché y temporales
+.sass-cache/
+.nuget/
+packages/
+.dotnet/
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+# Carpetas de base de datos SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Carpetas y archivos de herramientas
+.dotnet/
+.tools/
+.ionide/
+StyleCop.Cache
+
+# Archivos temporales
+*~
+*.bak
+*.tmp
+*.swp
+*.[Cc]ache
+ClientBin/
+~$*
+*~
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.snk
+
+# Archivos específicos de Rider
+.idea/
+*.sln.iml
+
+# Archivos de cobertura
+*.coverage
+*.coveragexml
+*.opencover.xml
+
+# Carpeta de archivos generados automáticamente
+Generated_Code/
