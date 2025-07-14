@@ -1,0 +1,122 @@
+@page "/Dashboard"
+@attribute [Authorize(Policy = "ViewDashboard")]
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+
+<PageTitle>Tablero - ALGA System</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Tablero</h3>
+        <div>
+            <button class="outlook-btn outlook-btn-primary">
+                <i class="oi oi-reload"></i> Actualizar
+            </button>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="outlook-card">
+                    <div class="outlook-card-header">
+                        <h4>Usuarios</h4>
+                    </div>
+                    <div class="outlook-card-body text-center">
+                        <h2>@_userCount</h2>
+                        <p>Total Usuarios</p>
+                        <a href="users" class="outlook-btn outlook-btn-primary">Administrar Usuarios</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="outlook-card">
+                    <div class="outlook-card-header">
+                        <h4>Roles</h4>
+                    </div>
+                    <div class="outlook-card-body text-center">
+                        <h2>@_roleCount</h2>
+                        <p>Total Roles</p>
+                        <a href="roles" class="outlook-btn outlook-btn-primary">Administrar Roles</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="outlook-card">
+                    <div class="outlook-card-header">
+                        <h4>Permisos</h4>
+                    </div>
+                    <div class="outlook-card-body text-center">
+                        <h2>@_permissionCount</h2>
+                        <p>Total Permisos</p>
+                        <a href="permissions" class="outlook-btn outlook-btn-primary">Administrar Permisos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="outlook-card mt-4">
+    <div class="outlook-card-header">
+        <h3>Actividad Reciente</h3>
+    </div>
+    <div class="outlook-card-body">
+        <table class="outlook-table">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Acción</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var activity in _recentActivities)
+                {
+                    <tr>
+                        <td>@activity.User</td>
+                        <td>@activity.Action</td>
+                        <td>@activity.Date.ToString("yyyy-MM-dd HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private int _userCount;
+    private int _roleCount;
+    private int _permissionCount;
+    private List<RecentActivity> _recentActivities = new List<RecentActivity>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // In a real application, these would be actual counts from the database
+        var users = await UserService.GetAllUsersAsync();
+        _userCount = users.Count();
+
+        var roles = await RoleService.GetAllRolesAsync();
+        _roleCount = roles.Count();
+
+        var permissions = await PermissionService.GetAllPermissionsAsync();
+        _permissionCount = permissions.Count();
+
+        // Sample data for recent activities
+        _recentActivities = new List<RecentActivity>
+        {
+            new RecentActivity { User = "Admin", Action = "Creó nuevo usuario", Date = DateTime.Now.AddHours(-1) },
+            new RecentActivity { User = "Admin", Action = "Actualizó permisos de rol", Date = DateTime.Now.AddHours(-2) },
+            new RecentActivity { User = "Sistema", Action = "Copia de seguridad completada", Date = DateTime.Now.AddHours(-12) },
+            new RecentActivity { User = "Admin", Action = "Agregó nuevo permiso", Date = DateTime.Now.AddDays(-1) },
+            new RecentActivity { User = "Sistema", Action = "Mantenimiento del sistema", Date = DateTime.Now.AddDays(-2) }
+        };
+    }
+
+    private class RecentActivity
+    {
+        public string User { get; set; }
+        public string Action { get; set; }
+        public DateTime Date { get; set; }
+    }
+}

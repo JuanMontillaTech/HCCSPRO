@@ -1,0 +1,221 @@
+@page "/settings"
+@attribute [Authorize(Policy = "ManageSettings")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using ALGASystem.Shared
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+
+<PageTitleComponent Title="Settings - ALGA System" />
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Application Settings</h3>
+    </div>
+    <div class="outlook-card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="nav flex-column nav-pills" id="settings-tab" role="tablist" aria-orientation="vertical">
+                    <button class="nav-link active" id="general-tab" data-bs-toggle="pill" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+                        <i class="oi oi-cog me-2"></i> General
+                    </button>
+                    <button class="nav-link" id="appearance-tab" data-bs-toggle="pill" data-bs-target="#appearance" type="button" role="tab" aria-controls="appearance" aria-selected="false">
+                        <i class="oi oi-brush me-2"></i> Appearance
+                    </button>
+                    <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false">
+                        <i class="oi oi-lock-locked me-2"></i> Security
+                    </button>
+                    <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" data-bs-target="#notifications" type="button" role="tab" aria-controls="notifications" aria-selected="false">
+                        <i class="oi oi-bell me-2"></i> Notifications
+                    </button>
+                    <button class="nav-link" id="backup-tab" data-bs-toggle="pill" data-bs-target="#backup" type="button" role="tab" aria-controls="backup" aria-selected="false">
+                        <i class="oi oi-data-transfer-download me-2"></i> Backup & Restore
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="tab-content" id="settings-tabContent">
+                    <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                        <h4>General Settings</h4>
+                        <hr />
+                        <div class="mb-3">
+                            <label class="form-label">Application Name</label>
+                            <input type="text" class="form-control" value="ALGA System" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Default Language</label>
+                            <select class="form-select">
+                                <option selected>English</option>
+                                <option>Spanish</option>
+                                <option>French</option>
+                                <option>German</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Time Zone</label>
+                            <select class="form-select">
+                                <option selected>(UTC-05:00) Eastern Time (US & Canada)</option>
+                                <option>(UTC-06:00) Central Time (US & Canada)</option>
+                                <option>(UTC-07:00) Mountain Time (US & Canada)</option>
+                                <option>(UTC-08:00) Pacific Time (US & Canada)</option>
+                                <option>(UTC+00:00) UTC</option>
+                            </select>
+                        </div>
+                        <button class="outlook-btn outlook-btn-primary">Save Changes</button>
+                    </div>
+                    <div class="tab-pane fade" id="appearance" role="tabpanel" aria-labelledby="appearance-tab">
+                        <h4>Appearance Settings</h4>
+                        <hr />
+                        <div class="mb-3">
+                            <label class="form-label">Theme</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="themeLight" checked>
+                                    <label class="form-check-label" for="themeLight">
+                                        Light
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="themeDark">
+                                    <label class="form-check-label" for="themeDark">
+                                        Dark
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="themeSystem">
+                                    <label class="form-check-label" for="themeSystem">
+                                        System Default
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Font Size</label>
+                            <select class="form-select">
+                                <option>Small</option>
+                                <option selected>Medium</option>
+                                <option>Large</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Accent Color</label>
+                            <input type="color" class="form-control form-control-color" value="#0078d4">
+                        </div>
+                        <button class="outlook-btn outlook-btn-primary">Save Changes</button>
+                    </div>
+                    <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                        <h4>Security Settings</h4>
+                        <hr />
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="twoFactorAuth">
+                            <label class="form-check-label" for="twoFactorAuth">Enable Two-Factor Authentication</label>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="sessionTimeout" checked>
+                            <label class="form-check-label" for="sessionTimeout">Automatic Session Timeout</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Session Timeout (minutes)</label>
+                            <input type="number" class="form-control" value="30" min="5" max="120">
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auditLogging" checked>
+                            <label class="form-check-label" for="auditLogging">Enable Audit Logging</label>
+                        </div>
+                        <button class="outlook-btn outlook-btn-primary">Save Changes</button>
+                    </div>
+                    <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+                        <h4>Notification Settings</h4>
+                        <hr />
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                            <label class="form-check-label" for="emailNotifications">Email Notifications</label>
+                        </div>
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="browserNotifications">
+                            <label class="form-check-label" for="browserNotifications">Browser Notifications</label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notification Events</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifyUserCreated" checked>
+                                <label class="form-check-label" for="notifyUserCreated">
+                                    New User Created
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifyRoleChanged" checked>
+                                <label class="form-check-label" for="notifyRoleChanged">
+                                    Role Changes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifyPermissionChanged">
+                                <label class="form-check-label" for="notifyPermissionChanged">
+                                    Permission Changes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="notifySystemEvents" checked>
+                                <label class="form-check-label" for="notifySystemEvents">
+                                    System Events
+                                </label>
+                            </div>
+                        </div>
+                        <button class="outlook-btn outlook-btn-primary">Save Changes</button>
+                    </div>
+                    <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+                        <h4>Backup & Restore</h4>
+                        <hr />
+                        <div class="mb-4">
+                            <h5>Backup Database</h5>
+                            <p>Create a backup of the current database state.</p>
+                            <button class="outlook-btn outlook-btn-primary">
+                                <i class="oi oi-cloud-download me-2"></i> Create Backup
+                            </button>
+                        </div>
+                        <div class="mb-4">
+                            <h5>Scheduled Backups</h5>
+                            <div class="mb-3 form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="scheduledBackups" checked>
+                                <label class="form-check-label" for="scheduledBackups">Enable Scheduled Backups</label>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Backup Frequency</label>
+                                <select class="form-select">
+                                    <option>Daily</option>
+                                    <option selected>Weekly</option>
+                                    <option>Monthly</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Retention Period (days)</label>
+                                <input type="number" class="form-control" value="30" min="1">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <h5>Restore Database</h5>
+                            <p>Restore the database from a previous backup.</p>
+                            <div class="mb-3">
+                                <label class="form-label">Select Backup</label>
+                                <select class="form-select">
+                                    <option>Backup - 2025-07-13 (Latest)</option>
+                                    <option>Backup - 2025-07-06</option>
+                                    <option>Backup - 2025-06-29</option>
+                                </select>
+                            </div>
+                            <button class="outlook-btn outlook-btn-warning">
+                                <i class="oi oi-cloud-upload me-2"></i> Restore Backup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // In a real application, these settings would be loaded from and saved to a database or configuration file
+}

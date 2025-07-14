@@ -1,0 +1,27 @@
+@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Web
+@inject ILogger<RedirectToLogin> Logger
+@inject AuthenticationStateProvider AuthStateProvider
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        
+        Logger.LogWarning($"Redirigiendo acceso no autorizado al inicio de sesión. Usuario autenticado: {user.Identity?.IsAuthenticated}, Ruta: {NavigationManager.Uri}");
+        
+        // Extraer la ruta actual para usarla como returnUrl
+        var returnUrl = NavigationManager.Uri;
+        
+        // Verificar si ya estamos en la página de login para evitar redirecciones infinitas
+        if (NavigationManager.Uri.Contains("/login", StringComparison.OrdinalIgnoreCase))
+        {
+            Logger.LogWarning("Ya estamos en la página de inicio de sesión, evitando bucle de redirección");
+            return;
+        }
+        
+        Logger.LogInformation($"Redirigiendo al inicio de sesión con returnUrl: {returnUrl}");
+        NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(returnUrl)}", true);
+    }
+}

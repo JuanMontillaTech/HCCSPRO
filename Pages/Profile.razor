@@ -1,0 +1,323 @@
+@page "/profile"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+
+<PageTitle>My Profile - ALGA System</PageTitle>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="outlook-card">
+            <div class="outlook-card-header">
+                <h3>Profile Information</h3>
+            </div>
+            <div class="outlook-card-body">
+                @if (_loading)
+                {
+                    <div class="text-center p-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading profile...</p>
+                    </div>
+                }
+                else if (_currentUser == null)
+                {
+                    <div class="alert alert-warning">
+                        <i class="oi oi-warning"></i> Unable to load user profile.
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center mb-4">
+                        <div class="profile-avatar">
+                            <i class="oi oi-person" style="font-size: 48px;"></i>
+                        </div>
+                        <h4 class="mt-2">@_currentUser.FirstName @_currentUser.LastName</h4>
+                        <p class="text-muted">@_currentUser.Email</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="@_currentUser.UserName" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="@_currentUser.Email" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">First Name</label>
+                        <input type="text" class="form-control" @bind="_profileModel.FirstName" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Last Name</label>
+                        <input type="text" class="form-control" @bind="_profileModel.LastName" />
+                    </div>
+
+                    <button class="outlook-btn outlook-btn-primary w-100" @onclick="UpdateProfile">
+                        <i class="oi oi-pencil"></i> Update Profile
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="outlook-card mb-4">
+            <div class="outlook-card-header">
+                <h3>Change Password</h3>
+            </div>
+            <div class="outlook-card-body">
+                <EditForm Model="@_passwordModel" OnValidSubmit="ChangePassword">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="mb-3">
+                        <label class="form-label">Current Password</label>
+                        <InputText type="password" class="form-control" @bind-Value="_passwordModel.CurrentPassword" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <InputText type="password" class="form-control" @bind-Value="_passwordModel.NewPassword" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <InputText type="password" class="form-control" @bind-Value="_passwordModel.ConfirmPassword" />
+                    </div>
+
+                    <button type="submit" class="outlook-btn outlook-btn-primary">
+                        <i class="oi oi-lock-locked"></i> Change Password
+                    </button>
+                </EditForm>
+            </div>
+        </div>
+
+        <div class="outlook-card">
+            <div class="outlook-card-header">
+                <h3>My Roles and Permissions</h3>
+            </div>
+            <div class="outlook-card-body">
+                @if (_loading)
+                {
+                    <div class="text-center p-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <h4>Assigned Roles</h4>
+                    @if (!_userRoles.Any())
+                    {
+                        <div class="alert alert-info">No roles assigned.</div>
+                    }
+                    else
+                    {
+                        <ul class="list-group mb-4">
+                            @foreach (var role in _userRoles)
+                            {
+                                <li class="list-group-item">
+                                    <i class="oi oi-badge me-2"></i> @role
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <h4>Effective Permissions</h4>
+                    @if (!_effectivePermissions.Any())
+                    {
+                        <div class="alert alert-info">No permissions assigned.</div>
+                    }
+                    else
+                    {
+                        <div class="accordion" id="permissionsAccordion">
+                            @foreach (var module in _effectivePermissions.GroupBy(p => p.Module))
+                            {
+                                var moduleId = $"module_{module.Key.Replace(" ", "_")}";
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="@($"heading_{moduleId}")">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="@($"#collapse_{moduleId}")" aria-expanded="false" 
+                                                aria-controls="@($"collapse_{moduleId}")">
+                                            @module.Key
+                                        </button>
+                                    </h2>
+                                    <div id="@($"collapse_{moduleId}")" class="accordion-collapse collapse" 
+                                         aria-labelledby="@($"heading_{moduleId}")" data-bs-parent="#permissionsAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-group">
+                                                @foreach (var permission in module)
+                                                {
+                                                    <li class="list-group-item">
+                                                        <i class="oi oi-check me-2 text-success"></i>
+                                                        <strong>@permission.Name</strong>
+                                                        <p class="text-muted mb-0 small">@permission.Description</p>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_showSuccessMessage)
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <i class="oi oi-check me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close" @onclick="() => _showSuccessMessage = false"></button>
+            </div>
+            <div class="toast-body">
+                @_successMessage
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showErrorMessage)
+{
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-danger text-white">
+                <i class="oi oi-warning me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close" @onclick="() => _showErrorMessage = false"></button>
+            </div>
+            <div class="toast-body">
+                @_errorMessage
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private ApplicationUser _currentUser;
+    private ProfileModel _profileModel = new ProfileModel();
+    private PasswordModel _passwordModel = new PasswordModel();
+    private IList<string> _userRoles = new List<string>();
+    private IEnumerable<Permission> _effectivePermissions = new List<Permission>();
+    private bool _showSuccessMessage = false;
+    private string _successMessage = "";
+    private bool _showErrorMessage = false;
+    private string _errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                _currentUser = await UserService.GetUserByIdAsync(userId);
+                
+                if (_currentUser != null)
+                {
+                    _profileModel.FirstName = _currentUser.FirstName;
+                    _profileModel.LastName = _currentUser.LastName;
+                    
+                    _userRoles = await UserService.GetUserRolesAsync(userId);
+                    _effectivePermissions = await UserService.GetEffectivePermissionsAsync(userId);
+                }
+            }
+        }
+        
+        _loading = false;
+    }
+
+    private async Task UpdateProfile()
+    {
+        if (_currentUser != null)
+        {
+            _currentUser.FirstName = _profileModel.FirstName;
+            _currentUser.LastName = _profileModel.LastName;
+            
+            var result = await UserService.UpdateUserAsync(_currentUser);
+            
+            if (result.Succeeded)
+            {
+                _successMessage = "Profile updated successfully.";
+                _showSuccessMessage = true;
+            }
+            else
+            {
+                _errorMessage = "Failed to update profile.";
+                _showErrorMessage = true;
+            }
+        }
+    }
+
+    private async Task ChangePassword()
+    {
+        if (_currentUser != null)
+        {
+            if (_passwordModel.NewPassword != _passwordModel.ConfirmPassword)
+            {
+                _errorMessage = "New password and confirmation do not match.";
+                _showErrorMessage = true;
+                return;
+            }
+            
+            var result = await UserService.ChangePasswordAsync(
+                _currentUser, 
+                _passwordModel.CurrentPassword, 
+                _passwordModel.NewPassword);
+            
+            if (result.Succeeded)
+            {
+                _successMessage = "Password changed successfully.";
+                _showSuccessMessage = true;
+                _passwordModel = new PasswordModel();
+            }
+            else
+            {
+                _errorMessage = "Failed to change password. Please ensure your current password is correct.";
+                _showErrorMessage = true;
+            }
+        }
+    }
+
+    private class ProfileModel
+    {
+        [Required(ErrorMessage = "First name is required")]
+        public string FirstName { get; set; }
+        
+        [Required(ErrorMessage = "Last name is required")]
+        public string LastName { get; set; }
+    }
+
+    private class PasswordModel
+    {
+        [Required(ErrorMessage = "Current password is required")]
+        public string CurrentPassword { get; set; }
+        
+        [Required(ErrorMessage = "New password is required")]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        public string NewPassword { get; set; }
+        
+        [Required(ErrorMessage = "Password confirmation is required")]
+        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+}

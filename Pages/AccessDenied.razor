@@ -1,0 +1,43 @@
+@page "/accessdenied"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+
+<PageTitle>Access Denied - ALGA System</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="outlook-card mt-5">
+            <div class="outlook-card-header text-center text-danger">
+                <h3><i class="oi oi-shield me-2"></i> Access Denied</h3>
+            </div>
+            <div class="outlook-card-body text-center">
+                <div class="mb-4">
+                    <i class="oi oi-lock-locked text-danger" style="font-size: 4rem;"></i>
+                </div>
+                <p class="lead">You do not have permission to access this resource.</p>
+                <p>Please contact your administrator if you believe this is an error.</p>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button class="outlook-btn outlook-btn-primary" @onclick="GoBack">
+                        <i class="oi oi-arrow-left me-2"></i> Go Back
+                    </button>
+                    <a href="/" class="outlook-btn outlook-btn-secondary">
+                        <i class="oi oi-home me-2"></i> Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void GoBack()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

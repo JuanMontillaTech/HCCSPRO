@@ -1,0 +1,474 @@
+@page "/users"
+@attribute [Authorize(Policy = "ViewUsers")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using ALGASystem.Shared
+@inject IUserService UserService
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+@inject NavigationManager NavigationManager
+
+<PageTitleComponent Title="User Management - ALGA System" />
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>User Management</h3>
+        <div>
+            <button class="outlook-btn outlook-btn-primary" @onclick="() => ShowUserModal(null)">
+                <i class="oi oi-plus"></i> Add User
+            </button>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_loading)
+        {
+            <div class="text-center p-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading users...</p>
+            </div>
+        }
+        else if (_users == null || !_users.Any())
+        {
+            <div class="alert alert-info">
+                No users found. Click "Add User" to create a new user.
+            </div>
+        }
+        else
+        {
+            <table class="outlook-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in _users)
+                    {
+                        <tr>
+                            <td>@user.UserName</td>
+                            <td>@user.Email</td>
+                            <td>@user.FirstName</td>
+                            <td>@user.LastName</td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowUserModal(user)">
+                                    <i class="oi oi-pencil"></i> Edit
+                                </button>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowRolesModal(user)">
+                                    <i class="oi oi-badge"></i> Roles
+                                </button>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowPermissionsModal(user)">
+                                    <i class="oi oi-lock-locked"></i> Permissions
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (_showUserModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(_selectedUser == null ? "Add User" : "Edit User")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseUserModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@_userModel" OnValidSubmit="SaveUser">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Username</label>
+                            <InputText @bind-Value="_userModel.UserName" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Email</label>
+                            <InputText @bind-Value="_userModel.Email" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">First Name</label>
+                            <InputText @bind-Value="_userModel.FirstName" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Last Name</label>
+                            <InputText @bind-Value="_userModel.LastName" class="outlook-form-control" />
+                        </div>
+
+                        @if (_selectedUser == null)
+                        {
+                            <div class="outlook-form-group">
+                                <label class="outlook-form-label">Password</label>
+                                <InputText type="password" @bind-Value="_userModel.Password" class="outlook-form-control" />
+                            </div>
+                        }
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">
+                                <InputCheckbox @bind-Value="_userModel.IsActive" />
+                                Active
+                            </label>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="CloseUserModal">Cancel</button>
+                            <button type="submit" class="outlook-btn outlook-btn-primary">Save</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showRolesModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Roles for @_selectedUser?.UserName</h5>
+                    <button type="button" class="btn-close" @onclick="CloseRolesModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_availableRoles == null || !_availableRoles.Any())
+                    {
+                        <div class="alert alert-info">No roles available.</div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var role in _availableRoles)
+                            {
+                                <div class="list-group-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               checked="@_userRoles.Contains(role.Name)" 
+                                               @onchange="(e) => ToggleRole(role.Name, (bool)e.Value)" 
+                                               id="@($"role_{role.Id}")" />
+                                        <label class="form-check-label" for="@($"role_{role.Id}")">
+                                            @role.Name
+                                        </label>
+                                        <small class="text-muted d-block">@role.Description</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="CloseRolesModal">Cancel</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="SaveUserRoles">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showPermissionsModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Permissions for @_selectedUser?.UserName</h5>
+                    <button type="button" class="btn-close" @onclick="ClosePermissionsModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="oi oi-info"></i> User has permissions from assigned roles plus any direct permissions assigned here.
+                    </div>
+                    
+                    @if (_availablePermissions == null || !_availablePermissions.Any())
+                    {
+                        <div class="alert alert-warning">No permissions available.</div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var permission in _availablePermissions.GroupBy(p => p.Module))
+                            {
+                                <div class="list-group-item list-group-item-secondary">
+                                    <strong>@permission.Key</strong>
+                                </div>
+                                @foreach (var perm in permission)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   checked="@_userPermissions.Any(up => up.Id == perm.Id)" 
+                                                   @onchange="(e) => TogglePermission(perm.Id, (bool)e.Value)" 
+                                                   id="@($"perm_{perm.Id}")" />
+                                            <label class="form-check-label" for="@($"perm_{perm.Id}")">
+                                                @perm.Name
+                                            </label>
+                                            <small class="text-muted d-block">@perm.Description</small>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="ClosePermissionsModal">Cancel</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="SaveUserPermissions">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private bool _loading = true;
+    private IEnumerable<ApplicationUser> _users;
+    private ApplicationUser _selectedUser;
+    private UserModel _userModel = new UserModel();
+    private bool _showUserModal = false;
+    private bool _showRolesModal = false;
+    private bool _showPermissionsModal = false;
+    private IEnumerable<ApplicationRole> _availableRoles;
+    private IList<string> _userRoles = new List<string>();
+    private IEnumerable<Permission> _availablePermissions;
+    private IEnumerable<Permission> _userPermissions = new List<Permission>();
+    private Dictionary<string, bool> _roleChanges = new Dictionary<string, bool>();
+    private Dictionary<int, bool> _permissionChanges = new Dictionary<int, bool>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+        await LoadRolesAsync();
+        await LoadPermissionsAsync();
+        _loading = false;
+    }
+    
+    private async Task LoadPermissionsAsync()
+    {
+        _availablePermissions = await PermissionService.GetAllPermissionsAsync();
+    }
+    
+    private async Task LoadRolesAsync()
+    {
+        _availableRoles = await RoleService.GetAllRolesAsync();
+    }
+
+    private async Task LoadUsers()
+    {
+        _users = await UserService.GetAllUsersAsync();
+    }
+
+    private void ShowUserModal(ApplicationUser user)
+    {
+        _selectedUser = user;
+        
+        if (user != null)
+        {
+            _userModel = new UserModel
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive
+            };
+        }
+        else
+        {
+            _userModel = new UserModel
+            {
+                IsActive = true
+            };
+        }
+        
+        _showUserModal = true;
+    }
+
+    private void CloseUserModal()
+    {
+        _showUserModal = false;
+    }
+
+    private async Task SaveUser()
+    {
+        if (_selectedUser == null)
+        {
+            // Create new user
+            var newUser = new ApplicationUser
+            {
+                UserName = _userModel.UserName,
+                Email = _userModel.Email,
+                FirstName = _userModel.FirstName,
+                LastName = _userModel.LastName,
+                IsActive = _userModel.IsActive
+            };
+
+            var result = await UserService.CreateUserAsync(newUser, _userModel.Password);
+            if (result.Succeeded)
+            {
+                await LoadUsers();
+                CloseUserModal();
+            }
+            else
+            {
+                // Handle errors
+            }
+        }
+        else
+        {
+            // Update existing user
+            _selectedUser.UserName = _userModel.UserName;
+            _selectedUser.Email = _userModel.Email;
+            _selectedUser.FirstName = _userModel.FirstName;
+            _selectedUser.LastName = _userModel.LastName;
+            _selectedUser.IsActive = _userModel.IsActive;
+
+            var result = await UserService.UpdateUserAsync(_selectedUser);
+            if (result.Succeeded)
+            {
+                await LoadUsers();
+                CloseUserModal();
+            }
+            else
+            {
+                // Handle errors
+            }
+        }
+    }
+
+    private async Task ShowRolesModal(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _availableRoles = await RoleService.GetAllRolesAsync();
+        _userRoles = await UserService.GetUserRolesAsync(user.Id);
+        _roleChanges.Clear();
+        _showRolesModal = true;
+    }
+
+    private void CloseRolesModal()
+    {
+        _showRolesModal = false;
+    }
+
+    private void ToggleRole(string roleName, bool isChecked)
+    {
+        _roleChanges[roleName] = isChecked;
+    }
+
+    private async Task SaveUserRoles()
+    {
+        foreach (var change in _roleChanges)
+        {
+            if (change.Value)
+            {
+                // Add role
+                if (!_userRoles.Contains(change.Key))
+                {
+                    await UserService.AddUserToRoleAsync(_selectedUser.Id, change.Key);
+                }
+            }
+            else
+            {
+                // Remove role
+                if (_userRoles.Contains(change.Key))
+                {
+                    await UserService.RemoveUserFromRoleAsync(_selectedUser.Id, change.Key);
+                }
+            }
+        }
+
+        CloseRolesModal();
+    }
+
+    private async Task ShowPermissionsModal(ApplicationUser user)
+    {
+        _selectedUser = user;
+        await LoadPermissionsAsync();
+        // In a real application, you would load the user's direct permissions here
+        // This is a placeholder for demonstration
+        _userPermissions = new List<Permission>();
+        _permissionChanges.Clear();
+        _showPermissionsModal = true;
+    }
+
+    private void ClosePermissionsModal()
+    {
+        _showPermissionsModal = false;
+    }
+
+    private void TogglePermission(int permissionId, bool isChecked)
+    {
+        _permissionChanges[permissionId] = isChecked;
+    }
+
+    private async Task SaveUserPermissions()
+    {
+        foreach (var change in _permissionChanges)
+        {
+            if (change.Value)
+            {
+                // Add permission
+                await UserService.AssignPermissionToUserAsync(_selectedUser.Id, change.Key);
+            }
+            else
+            {
+                // Remove permission
+                await UserService.RemovePermissionFromUserAsync(_selectedUser.Id, change.Key);
+            }
+        }
+
+        ClosePermissionsModal();
+    }
+
+    public class UserModel
+    {
+        public string Id { get; set; }
+        
+        [Required(ErrorMessage = "Username is required")]
+        public string UserName { get; set; }
+        
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; }
+        
+        [Required(ErrorMessage = "First name is required")]
+        public string FirstName { get; set; }
+        
+        [Required(ErrorMessage = "Last name is required")]
+        public string LastName { get; set; }
+        
+        [Required(ErrorMessage = "Password is required when creating a new user")]
+        public string Password { get; set; } = string.Empty;
+        
+        public bool IsActive { get; set; }
+    }
+}

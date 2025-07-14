@@ -1,0 +1,343 @@
+@page "/roles"
+@attribute [Authorize(Policy = "ViewRoles")]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@inject IRoleService RoleService
+@inject IPermissionService PermissionService
+
+<PageTitle>Role Management - ALGA System</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Role Management</h3>
+        <div>
+            <button class="outlook-btn outlook-btn-primary" @onclick="() => ShowRoleModal(null)">
+                <i class="oi oi-plus"></i> Add Role
+            </button>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_loading)
+        {
+            <div class="text-center p-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading roles...</p>
+            </div>
+        }
+        else if (_roles == null || !_roles.Any())
+        {
+            <div class="alert alert-info">
+                No roles found. Click "Add Role" to create a new role.
+            </div>
+        }
+        else
+        {
+            <table class="outlook-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in _roles)
+                    {
+                        <tr>
+                            <td>@role.Name</td>
+                            <td>@role.Description</td>
+                            <td>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowRoleModal(role)">
+                                    <i class="oi oi-pencil"></i> Edit
+                                </button>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowPermissionsModal(role)">
+                                    <i class="oi oi-lock-locked"></i> Permissions
+                                </button>
+                                <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => DeleteRole(role)">
+                                    <i class="oi oi-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (_showRoleModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(_selectedRole == null ? "Add Role" : "Edit Role")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseRoleModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@_roleModel" OnValidSubmit="SaveRole">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Name</label>
+                            <InputText @bind-Value="_roleModel.Name" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Description</label>
+                            <InputTextArea @bind-Value="_roleModel.Description" class="outlook-form-control" rows="3" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="CloseRoleModal">Cancel</button>
+                            <button type="submit" class="outlook-btn outlook-btn-primary">Save</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showPermissionsModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Permissions for Role: @_selectedRole?.Name</h5>
+                    <button type="button" class="btn-close" @onclick="ClosePermissionsModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (_availablePermissions == null || !_availablePermissions.Any())
+                    {
+                        <div class="alert alert-warning">No permissions available.</div>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+                            @foreach (var permissionGroup in _availablePermissions.GroupBy(p => p.Module))
+                            {
+                                <div class="list-group-item list-group-item-secondary">
+                                    <strong>@permissionGroup.Key</strong>
+                                </div>
+                                @foreach (var permission in permissionGroup)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   checked="@_rolePermissions.Any(p => p.Id == permission.Id)" 
+                                                   @onchange="(e) => TogglePermission(permission.Id, (bool)e.Value)" 
+                                                   id="@($"perm_{permission.Id}")" />
+                                            <label class="form-check-label" for="@($"perm_{permission.Id}")">
+                                                @permission.Name
+                                            </label>
+                                            <small class="text-muted d-block">@permission.Description</small>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="ClosePermissionsModal">Cancel</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="SaveRolePermissions">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showDeleteConfirmation)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showDeleteConfirmation = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the role <strong>@_selectedRole?.Name</strong>?</p>
+                    <p class="text-danger">This action cannot be undone and may affect users assigned to this role.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="() => _showDeleteConfirmation = false">Cancel</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="ConfirmDeleteRole">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private bool _loading = true;
+    private IEnumerable<ApplicationRole> _roles;
+    private ApplicationRole _selectedRole;
+    private RoleModel _roleModel = new RoleModel();
+    private bool _showRoleModal = false;
+    private bool _showPermissionsModal = false;
+    private bool _showDeleteConfirmation = false;
+    private IEnumerable<Permission> _availablePermissions;
+    private IEnumerable<Permission> _rolePermissions = new List<Permission>();
+    private Dictionary<int, bool> _permissionChanges = new Dictionary<int, bool>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRoles();
+        _loading = false;
+    }
+
+    private async Task LoadRoles()
+    {
+        _roles = await RoleService.GetAllRolesAsync();
+    }
+
+    private void ShowRoleModal(ApplicationRole role)
+    {
+        _selectedRole = role;
+        
+        if (role != null)
+        {
+            _roleModel = new RoleModel
+            {
+                Id = role.Id,
+                Name = role.Name,
+                Description = role.Description
+            };
+        }
+        else
+        {
+            _roleModel = new RoleModel();
+        }
+        
+        _showRoleModal = true;
+    }
+
+    private void CloseRoleModal()
+    {
+        _showRoleModal = false;
+    }
+
+    private async Task SaveRole()
+    {
+        if (_selectedRole == null)
+        {
+            // Create new role
+            var newRole = new ApplicationRole
+            {
+                Name = _roleModel.Name,
+                Description = _roleModel.Description
+            };
+
+            var result = await RoleService.CreateRoleAsync(newRole);
+            if (result.Succeeded)
+            {
+                await LoadRoles();
+                CloseRoleModal();
+            }
+            else
+            {
+                // Handle errors
+            }
+        }
+        else
+        {
+            // Update existing role
+            _selectedRole.Name = _roleModel.Name;
+            _selectedRole.Description = _roleModel.Description;
+
+            var result = await RoleService.UpdateRoleAsync(_selectedRole);
+            if (result.Succeeded)
+            {
+                await LoadRoles();
+                CloseRoleModal();
+            }
+            else
+            {
+                // Handle errors
+            }
+        }
+    }
+
+    private async Task ShowPermissionsModal(ApplicationRole role)
+    {
+        _selectedRole = role;
+        _availablePermissions = await PermissionService.GetAllPermissionsAsync();
+        _rolePermissions = await RoleService.GetRolePermissionsAsync(role.Id);
+        _permissionChanges.Clear();
+        _showPermissionsModal = true;
+    }
+
+    private void ClosePermissionsModal()
+    {
+        _showPermissionsModal = false;
+    }
+
+    private void TogglePermission(int permissionId, bool isChecked)
+    {
+        _permissionChanges[permissionId] = isChecked;
+    }
+
+    private async Task SaveRolePermissions()
+    {
+        foreach (var change in _permissionChanges)
+        {
+            if (change.Value)
+            {
+                // Add permission to role
+                await RoleService.AssignPermissionToRoleAsync(_selectedRole.Id, change.Key);
+            }
+            else
+            {
+                // Remove permission from role
+                await RoleService.RemovePermissionFromRoleAsync(_selectedRole.Id, change.Key);
+            }
+        }
+
+        ClosePermissionsModal();
+    }
+
+    private void DeleteRole(ApplicationRole role)
+    {
+        _selectedRole = role;
+        _showDeleteConfirmation = true;
+    }
+
+    private async Task ConfirmDeleteRole()
+    {
+        if (_selectedRole != null)
+        {
+            var result = await RoleService.DeleteRoleAsync(_selectedRole.Id);
+            if (result.Succeeded)
+            {
+                await LoadRoles();
+            }
+            else
+            {
+                // Handle errors
+            }
+        }
+        
+        _showDeleteConfirmation = false;
+    }
+
+    public class RoleModel
+    {
+        public string Id { get; set; }
+        
+        [Required(ErrorMessage = "Role name is required")]
+        public string Name { get; set; }
+        
+        public string Description { get; set; }
+    }
+}

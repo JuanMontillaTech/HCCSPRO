@@ -1,0 +1,45 @@
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    @if (context.User.Identity?.IsAuthenticated != true)
+                    {
+                        <RedirectToLogin />
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger m-4">
+                            <h3 class="alert-heading">Acceso denegado</h3>
+                            <p>No estás autorizado para acceder a este recurso.</p>
+                            <p>
+                                <a href="/" class="btn btn-primary">Volver al inicio</a>
+                            </p>
+                        </div>
+                    }
+                </NotAuthorized>
+                <Authorizing>
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Verificando permisos...</p>
+                    </div>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Página no encontrada</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <div class="alert alert-warning m-4">
+                    <h3 class="alert-heading">Página no encontrada</h3>
+                    <p>Lo sentimos, la página que estás buscando no existe.</p>
+                    <p>
+                        <a href="/" class="btn btn-primary">Volver al inicio</a>
+                    </p>
+                </div>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

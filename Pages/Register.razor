@@ -1,0 +1,159 @@
+@page "/register"
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+@inject IRoleService RoleService
+
+<PageTitle>Register - ALGA System</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="outlook-card mt-5">
+            <div class="outlook-card-header text-center">
+                <h3>Register</h3>
+            </div>
+            <div class="outlook-card-body">
+                <EditForm Model="@_registerModel" OnValidSubmit="HandleRegister">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <div class="alert alert-danger">
+                            <i class="oi oi-warning me-2"></i> @_errorMessage
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="outlook-form-group">
+                                <label class="outlook-form-label">First Name</label>
+                                <InputText @bind-Value="_registerModel.FirstName" class="outlook-form-control" />
+                                <ValidationMessage For="@(() => _registerModel.FirstName)" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="outlook-form-group">
+                                <label class="outlook-form-label">Last Name</label>
+                                <InputText @bind-Value="_registerModel.LastName" class="outlook-form-control" />
+                                <ValidationMessage For="@(() => _registerModel.LastName)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="outlook-form-group">
+                        <label class="outlook-form-label">Username</label>
+                        <InputText @bind-Value="_registerModel.UserName" class="outlook-form-control" />
+                        <ValidationMessage For="@(() => _registerModel.UserName)" />
+                    </div>
+
+                    <div class="outlook-form-group">
+                        <label class="outlook-form-label">Email</label>
+                        <InputText @bind-Value="_registerModel.Email" class="outlook-form-control" />
+                        <ValidationMessage For="@(() => _registerModel.Email)" />
+                    </div>
+
+                    <div class="outlook-form-group">
+                        <label class="outlook-form-label">Password</label>
+                        <InputText type="password" @bind-Value="_registerModel.Password" class="outlook-form-control" />
+                        <ValidationMessage For="@(() => _registerModel.Password)" />
+                    </div>
+
+                    <div class="outlook-form-group">
+                        <label class="outlook-form-label">Confirm Password</label>
+                        <InputText type="password" @bind-Value="_registerModel.ConfirmPassword" class="outlook-form-control" />
+                        <ValidationMessage For="@(() => _registerModel.ConfirmPassword)" />
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="outlook-btn outlook-btn-primary">
+                            <i class="oi oi-plus me-2"></i> Register
+                        </button>
+                        <a href="login" class="outlook-btn outlook-btn-secondary">
+                            <i class="oi oi-account-login me-2"></i> Back to Login
+                        </a>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterModel _registerModel = new RegisterModel();
+    private string _errorMessage = string.Empty;
+
+    private async Task HandleRegister()
+    {
+        if (_registerModel.Password != _registerModel.ConfirmPassword)
+        {
+            _errorMessage = "The password and confirmation password do not match.";
+            return;
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = _registerModel.UserName,
+            Email = _registerModel.Email,
+            FirstName = _registerModel.FirstName,
+            LastName = _registerModel.LastName,
+            IsActive = true
+        };
+
+        var result = await UserManager.CreateAsync(user, _registerModel.Password);
+
+        if (result.Succeeded)
+        {
+            // Assign default role to new users
+            await UserManager.AddToRoleAsync(user, "User");
+            
+            // Log the registration activity
+            await UserService.LogActivityAsync(user.Id, "User registered");
+            
+            // Redirect to login page with success message
+            NavigationManager.NavigateTo("/login?registered=true");
+        }
+        else
+        {
+            _errorMessage = string.Join(", ", result.Errors.Select(e => e.Description));
+        }
+    }
+
+    public class RegisterModel
+    {
+        [Required(ErrorMessage = "First name is required")]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+
+        [Required(ErrorMessage = "Last name is required")]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
+
+        [Required(ErrorMessage = "Username is required")]
+        [Display(Name = "Username")]
+        public string UserName { get; set; }
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        [Display(Name = "Email")]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "Confirm password is required")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+}

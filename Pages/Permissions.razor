@@ -1,0 +1,243 @@
+@page "/permissions"
+@attribute [Authorize(Policy = "ViewPermissions")]
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using System.ComponentModel.DataAnnotations
+@inject IPermissionService PermissionService
+
+<PageTitle>Permission Management - ALGA System</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Permission Management</h3>
+        <div>
+            <button class="outlook-btn outlook-btn-primary" @onclick="() => ShowPermissionModal(null)">
+                <i class="oi oi-plus"></i> Add Permission
+            </button>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_loading)
+        {
+            <div class="text-center p-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading permissions...</p>
+            </div>
+        }
+        else if (_permissions == null || !_permissions.Any())
+        {
+            <div class="alert alert-info">
+                No permissions found. Click "Add Permission" to create a new permission.
+            </div>
+        }
+        else
+        {
+            <table class="outlook-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Module</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var module in _permissions.GroupBy(p => p.Module))
+                    {
+                        <tr class="table-secondary">
+                            <td colspan="4"><strong>@module.Key</strong></td>
+                        </tr>
+                        @foreach (var permission in module)
+                        {
+                            <tr>
+                                <td>@permission.Name</td>
+                                <td>@permission.Module</td>
+                                <td>@permission.Description</td>
+                                <td>
+                                    <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => ShowPermissionModal(permission)">
+                                        <i class="oi oi-pencil"></i> Edit
+                                    </button>
+                                    <button class="outlook-btn outlook-btn-secondary btn-sm" @onclick="() => DeletePermission(permission)">
+                                        <i class="oi oi-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (_showPermissionModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(_selectedPermission == null ? "Add Permission" : "Edit Permission")</h5>
+                    <button type="button" class="btn-close" @onclick="ClosePermissionModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@_permissionModel" OnValidSubmit="SavePermission">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Name</label>
+                            <InputText @bind-Value="_permissionModel.Name" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Module</label>
+                            <InputText @bind-Value="_permissionModel.Module" class="outlook-form-control" />
+                        </div>
+
+                        <div class="outlook-form-group">
+                            <label class="outlook-form-label">Description</label>
+                            <InputTextArea @bind-Value="_permissionModel.Description" class="outlook-form-control" rows="3" />
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="ClosePermissionModal">Cancel</button>
+                            <button type="submit" class="outlook-btn outlook-btn-primary">Save</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@if (_showDeleteConfirmation)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="btn-close" @onclick="() => _showDeleteConfirmation = false"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the permission <strong>@_selectedPermission?.Name</strong>?</p>
+                    <p class="text-danger">This action cannot be undone and may affect roles and users that have this permission.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="() => _showDeleteConfirmation = false">Cancel</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="ConfirmDeletePermission">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private bool _loading = true;
+    private IEnumerable<Permission> _permissions;
+    private Permission _selectedPermission;
+    private PermissionModel _permissionModel = new PermissionModel();
+    private bool _showPermissionModal = false;
+    private bool _showDeleteConfirmation = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPermissions();
+        _loading = false;
+    }
+
+    private async Task LoadPermissions()
+    {
+        _permissions = await PermissionService.GetAllPermissionsAsync();
+    }
+
+    private void ShowPermissionModal(Permission permission)
+    {
+        _selectedPermission = permission;
+        
+        if (permission != null)
+        {
+            _permissionModel = new PermissionModel
+            {
+                Id = permission.Id,
+                Name = permission.Name,
+                Module = permission.Module,
+                Description = permission.Description
+            };
+        }
+        else
+        {
+            _permissionModel = new PermissionModel();
+        }
+        
+        _showPermissionModal = true;
+    }
+
+    private void ClosePermissionModal()
+    {
+        _showPermissionModal = false;
+    }
+
+    private async Task SavePermission()
+    {
+        if (_selectedPermission == null)
+        {
+            // Create new permission
+            var newPermission = new Permission
+            {
+                Name = _permissionModel.Name,
+                Module = _permissionModel.Module,
+                Description = _permissionModel.Description
+            };
+
+            await PermissionService.CreatePermissionAsync(newPermission);
+            await LoadPermissions();
+            ClosePermissionModal();
+        }
+        else
+        {
+            // Update existing permission
+            _selectedPermission.Name = _permissionModel.Name;
+            _selectedPermission.Module = _permissionModel.Module;
+            _selectedPermission.Description = _permissionModel.Description;
+
+            await PermissionService.UpdatePermissionAsync(_selectedPermission);
+            await LoadPermissions();
+            ClosePermissionModal();
+        }
+    }
+
+    private void DeletePermission(Permission permission)
+    {
+        _selectedPermission = permission;
+        _showDeleteConfirmation = true;
+    }
+
+    private async Task ConfirmDeletePermission()
+    {
+        if (_selectedPermission != null)
+        {
+            await PermissionService.DeletePermissionAsync(_selectedPermission.Id);
+            await LoadPermissions();
+        }
+        
+        _showDeleteConfirmation = false;
+    }
+
+    public class PermissionModel
+    {
+        public int Id { get; set; }
+        
+        [Required(ErrorMessage = "Permission name is required")]
+        public string Name { get; set; }
+        
+        [Required(ErrorMessage = "Module is required")]
+        public string Module { get; set; }
+        
+        public string Description { get; set; }
+    }
+}

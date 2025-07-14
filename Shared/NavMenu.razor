@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components
+
+<div class="outlook-nav-container">
+    <div class="outlook-nav-header">
+        <button @onclick="ToggleNavMenu" class="menu-toggle-button">
+            <i class="oi oi-menu"></i>
+        </button>
+    </div>
+
+    <div class="@NavMenuCssClass">
+        <div class="outlook-nav-section">
+            <div class="outlook-nav-section-header">Main</div>
+            <NavLink class="outlook-nav-item" href="" Match="NavLinkMatch.All">
+                <i class="oi oi-dashboard"></i> Dashboard
+            </NavLink>
+            <NavLink class="outlook-nav-item" href="users">
+                <i class="oi oi-people"></i> Users
+            </NavLink>
+        </div>
+
+        <div class="outlook-nav-section">
+            <div class="outlook-nav-section-header">Administration</div>
+            <NavLink class="outlook-nav-item" href="roles">
+                <i class="oi oi-badge"></i> Roles
+            </NavLink>
+            <NavLink class="outlook-nav-item" href="permissions">
+                <i class="oi oi-lock-locked"></i> Permissions
+            </NavLink>
+        </div>
+
+        <div class="outlook-nav-section">
+            <div class="outlook-nav-section-header">Settings</div>
+            <NavLink class="outlook-nav-item" href="profile">
+                <i class="oi oi-person"></i> Profile
+            </NavLink>
+            <NavLink class="outlook-nav-item" href="settings">
+                <i class="oi oi-cog"></i> Settings
+            </NavLink>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

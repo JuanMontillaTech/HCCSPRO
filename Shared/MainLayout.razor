@@ -1,0 +1,55 @@
+@inherits LayoutComponentBase
+@using ALGASystem.Models
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager NavigationManager
+
+<PageTitle>ALGA System</PageTitle>
+
+<div class="outlook-layout">
+    <header class="outlook-header">
+        <div class="outlook-brand">
+            <img src="/images/logo.png" alt="ALGA System" class="logo" onerror="this.src='/images/default-logo.png'; this.onerror='';"/>
+            <h1>ALGA System</h1>
+        </div>
+        <div class="outlook-search">
+            <input type="text" placeholder="Search..." />
+            <button><i class="oi oi-magnifying-glass"></i></button>
+        </div>
+        <div class="outlook-user-menu">
+            <button class="user-button">
+                <i class="oi oi-person"></i>
+                <span>Admin</span>
+                <i class="oi oi-chevron-bottom"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="outlook-body">
+        <div class="outlook-sidebar">
+            <NavMenu />
+        </div>
+
+        <div class="outlook-content">
+            <div class="outlook-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-button"><i class="oi oi-plus"></i> New</button>
+                    <button class="toolbar-button"><i class="oi oi-trash"></i> Delete</button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-button"><i class="oi oi-reload"></i> Refresh</button>
+                    <button class="toolbar-button"><i class="oi oi-cog"></i> Settings</button>
+                </div>
+            </div>
+
+            <div class="outlook-main-content">
+                @Body
+            </div>
+        </div>
+    </div>
+
+    <footer class="outlook-footer">
+        <div>ALGA System &copy; @DateTime.Now.Year - All rights reserved</div>
+    </footer>
+</div>

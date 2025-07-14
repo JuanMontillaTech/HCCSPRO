@@ -1,0 +1,9 @@
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\rpswa.dswa.cache.json
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.GeneratedMSBuildEditorConfig.editorconfig
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.AssemblyInfoInputs.cache
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.AssemblyInfo.cs
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.csproj.CoreCompileInputs.cache
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.MvcApplicationPartsAssemblyInfo.cache
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.RazorAssemblyInfo.cache
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.RazorAssemblyInfo.cs
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net7.0\ALGASystem.csproj.AssemblyReference.cache
