@@ -1,50 +1,145 @@
 @inherits LayoutComponentBase
+@using System
 @using ALGASystem.Models
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
 
-<PageTitle>HCCS - Sistema de Gestión</PageTitle>
+<HeadContent>
+    <title>ALGA - Sistema de Gestión</title>
+</HeadContent>
 
 <div class="outlook-layout">
     <header class="outlook-header">
-        <div class="outlook-brand">
-            <img src="/images/Logo.jpeg" alt="ALGA System" class="logo" onerror="this.src='/images/default-logo.png'; this.onerror='';"/>
-            <h1>Hermanas de la caridad del cardenal sancha</h1>
+        <div class="outlook-top-bar">
+            <div class="outlook-logo">
+                <a href="/" class="brand-logo">
+                    <img src="/img/logo.png" alt="ALGA Logo" class="logo-image" />
+                    <span>ALGA System</span>
+                </a>
+            </div>
+            <div class="outlook-search">
+                <i class="oi oi-magnifying-glass search-icon"></i>
+                <input type="text" placeholder="Buscar..." />
+            </div>
+            <div class="outlook-actions">
+                <button class="outlook-action-btn" title="Notificaciones">
+                    <i class="oi oi-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="outlook-action-btn" title="Mensajes">
+                    <i class="oi oi-envelope-closed"></i>
+                </button>
+                <button class="outlook-action-btn" title="Calendario">
+                    <i class="oi oi-calendar"></i>
+                </button>
+            </div>
+            <div class="outlook-user-info">
+                <div class="user-dropdown">
+                    <button class="user-dropdown-toggle" @onclick="ToggleUserDropdown">
+                        <div class="avatar-circle">AB</div>
+                        <span>Admin</span>
+                        <i class="oi oi-caret-bottom"></i>
+                    </button>
+                    <div class="user-dropdown-menu @(_showUserDropdown ? "show" : "")">
+                        <div class="dropdown-header">
+                            <div class="avatar-circle avatar-large">AB</div>
+                            <div class="user-info-details">
+                                <div class="user-name">Administrador</div>
+                                <div class="user-email">admin@algasystem.com</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href="profile" class="dropdown-item"><i class="oi oi-person"></i> Mi perfil</a>
+                        <a href="settings" class="dropdown-item"><i class="oi oi-cog"></i> Configuración</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="Identity/Account/Logout" class="dropdown-item"><i class="oi oi-account-logout"></i> Cerrar sesión</a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="outlook-search">
-            <input type="text" placeholder="Search..." />
-            <button><i class="oi oi-magnifying-glass"></i></button>
-        </div>
-        <div class="outlook-user-menu">
-            <button class="user-button">
-                <i class="oi oi-person"></i>
-                <span>Admin</span>
-                <i class="oi oi-chevron-bottom"></i>
-            </button>
+        <div class="outlook-menu-bar">
+            <div class="menu-item active"><i class="oi oi-home"></i> Home</div>
+            <div class="menu-item"><i class="oi oi-eye"></i> View</div>
+            <div class="menu-item"><i class="oi oi-question-mark"></i> Help</div>
         </div>
     </header>
 
-    <div class="outlook-body">
-        <div class="outlook-sidebar">
-            <NavMenu />
-        </div>
+    <div class="outlook-container">
+        <aside class="outlook-sidebar @(_sidebarCollapsed ? "collapsed" : "")">
+            <div class="outlook-sidebar-header">
+                <div class="sidebar-title">Módulos</div>
+                <button class="sidebar-toggle" @onclick="ToggleSidebar" title="@(_sidebarCollapsed ? "Expandir" : "Contraer") barra lateral">
+                    <i class="oi oi-chevron-left"></i>
+                </button>
+            </div>
+            <div class="outlook-sidebar-content">
+                <div class="sidebar-nav">
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-header">FAVORITOS</div>
+                        <a href="/" class="sidebar-item @(NavigationManager.Uri.EndsWith("/") ? "active" : "")">
+                            <i class="oi oi-home"></i> Dashboard
+                        </a>
+                        <a href="/companies" class="sidebar-item">
+                            <i class="oi oi-briefcase"></i> Empresas
+                        </a>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-header">ADMINISTRACIÓN</div>
+                        <a href="/users" class="sidebar-item">
+                            <i class="oi oi-people"></i> Usuarios
+                        </a>
+                        <a href="/roles" class="sidebar-item">
+                            <i class="oi oi-badge"></i> Roles
+                        </a>
+                        <a href="/permissions" class="sidebar-item">
+                            <i class="oi oi-lock-locked"></i> Permisos
+                        </a>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-header">SISTEMA</div>
+                        <a href="/permission-diagnostic" class="sidebar-item">
+                            <i class="oi oi-medical-cross"></i> Diagnóstico
+                        </a>
+                        <a href="/profile" class="sidebar-item">
+                            <i class="oi oi-person"></i> Perfil
+                        </a>
+                        <a href="/settings" class="sidebar-item">
+                            <i class="oi oi-cog"></i> Configuración
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
         <div class="outlook-content">
             <div class="outlook-toolbar">
                 <div class="toolbar-group">
-                    <button class="toolbar-button"><i class="oi oi-plus"></i> New</button>
-                    <button class="toolbar-button"><i class="oi oi-trash"></i> Delete</button>
+                    <button class="toolbar-button primary-action"><i class="oi oi-plus"></i> <span>Nuevo</span></button>
+                    <div class="separator"></div>
+                    <button class="toolbar-button"><i class="oi oi-trash"></i> <span>Eliminar</span></button>
+                    <button class="toolbar-button"><i class="oi oi-pencil"></i> <span>Editar</span></button>
+                    <div class="separator"></div>
+                    <button class="toolbar-button"><i class="oi oi-reload"></i> <span>Actualizar</span></button>
                 </div>
                 <div class="toolbar-group">
-                    <button class="toolbar-button"><i class="oi oi-reload"></i> Refresh</button>
-                    <button class="toolbar-button"><i class="oi oi-cog"></i> Settings</button>
+                    <button class="toolbar-button"><i class="oi oi-magnifying-glass"></i></button>
+                    <button class="toolbar-button"><i class="oi oi-grid-three-up"></i></button>
+                    <button class="toolbar-button"><i class="oi oi-filter"></i></button>
+                    <button class="toolbar-button"><i class="oi oi-cog"></i></button>
                 </div>
             </div>
 
             <div class="outlook-main-content">
-                @Body
+                <div class="content-container">
+                    @Body
+                </div>
             </div>
         </div>
     </div>
@@ -53,3 +148,19 @@
         <div>ALGA System &copy; @DateTime.Now.Year - All rights reserved</div>
     </footer>
 </div>
+
+@code {
+    private bool _showUserDropdown = false;
+    private bool _sidebarCollapsed = false;
+
+    private void ToggleUserDropdown()
+    {
+        _showUserDropdown = !_showUserDropdown;
+    }
+
+    private void ToggleSidebar()
+    {
+        _sidebarCollapsed = !_sidebarCollapsed;
+        StateHasChanged();
+    }
+}

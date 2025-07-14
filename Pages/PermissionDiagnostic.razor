@@ -1,0 +1,201 @@
+@page "/permission-diagnostic"
+@using ALGASystem.Services.Interfaces
+@using ALGASystem.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Authorization
+@using System.Security.Claims
+@inject UserManager<ApplicationUser> UserManager
+@inject IPermissionService PermissionService
+@inject IRoleService RoleService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<h3>Diagnóstico de Permisos</h3>
+
+@if (_loading)
+{
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+}
+else if (_error != null)
+{
+    <div class="alert alert-danger">
+        <h4>Error</h4>
+        <p>@_error</p>
+    </div>
+}
+else
+{
+    <div class="outlook-card">
+        <div class="outlook-card-header">
+            <h4>Información de usuario</h4>
+        </div>
+        <div class="outlook-card-body">
+            <p><strong>Usuario:</strong> @_username</p>
+            <p><strong>Email:</strong> @_email</p>
+            <p><strong>ID:</strong> @_userId</p>
+            <p><strong>Estado:</strong> @(_isActive ? "Activo" : "Inactivo")</p>
+        </div>
+    </div>
+
+    <div class="outlook-card">
+        <div class="outlook-card-header">
+            <h4>Roles asignados</h4>
+        </div>
+        <div class="outlook-card-body">
+            @if (_userRoles.Any())
+            {
+                <ul>
+                    @foreach (var role in _userRoles)
+                    {
+                        <li>@role</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>El usuario no tiene roles asignados.</p>
+            }
+        </div>
+    </div>
+
+    <div class="outlook-card">
+        <div class="outlook-card-header">
+            <h4>Permisos directos</h4>
+        </div>
+        <div class="outlook-card-body">
+            @if (_userPermissions.Any())
+            {
+                <ul>
+                    @foreach (var permission in _userPermissions)
+                    {
+                        <li>@permission.Name</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>El usuario no tiene permisos directos asignados.</p>
+            }
+        </div>
+    </div>
+
+    <div class="outlook-card">
+        <div class="outlook-card-header">
+            <h4>Permisos por rol</h4>
+        </div>
+        <div class="outlook-card-body">
+            @foreach (var role in _userRoles)
+            {
+                <div class="mb-3">
+                    <h5>@role</h5>
+                    @if (_rolePermissions.ContainsKey(role) && _rolePermissions[role].Any())
+                    {
+                        <ul>
+                            @foreach (var permission in _rolePermissions[role])
+                            {
+                                <li>@permission.Name</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>Este rol no tiene permisos asignados.</p>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="outlook-card">
+        <div class="outlook-card-header">
+            <h4>Diagnóstico específico para 'Create Companies'</h4>
+        </div>
+        <div class="outlook-card-body">
+            <p><strong>El usuario tiene el permiso 'Create Companies' directo:</strong> @_hasCreateCompaniesPermissionDirect</p>
+            <p><strong>El usuario tiene el permiso 'Create Companies' a través de roles:</strong> @_hasCreateCompaniesPermissionViaRoles</p>
+            <p><strong>¿Qué roles tienen el permiso?</strong> @string.Join(", ", _rolesWithCreateCompaniesPermission)</p>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _loading = true;
+    private string _error;
+    
+    private string _username;
+    private string _email;
+    private string _userId;
+    private bool _isActive;
+    private List<string> _userRoles = new();
+    private IEnumerable<Permission> _userPermissions = Array.Empty<Permission>();
+    private Dictionary<string, IEnumerable<Permission>> _rolePermissions = new();
+    
+    private bool _hasCreateCompaniesPermissionDirect;
+    private bool _hasCreateCompaniesPermissionViaRoles;
+    private List<string> _rolesWithCreateCompaniesPermission = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _loading = true;
+            
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            
+            if (user?.Identity?.IsAuthenticated != true)
+            {
+                _error = "El usuario no está autenticado.";
+                return;
+            }
+
+            var appUser = await UserManager.GetUserAsync(user);
+            if (appUser == null)
+            {
+                _error = "No se pudo obtener el usuario.";
+                return;
+            }
+
+            _username = appUser.UserName;
+            _email = appUser.Email;
+            _userId = appUser.Id;
+            _isActive = appUser.IsActive;
+            
+            // Obtener roles del usuario
+            _userRoles = (await UserManager.GetRolesAsync(appUser)).ToList();
+            
+            // Obtener permisos directos del usuario
+            _userPermissions = await PermissionService.GetUserPermissionsAsync(appUser.Id);
+            
+            // Verificar si el usuario tiene el permiso "Create Companies" directamente
+            _hasCreateCompaniesPermissionDirect = _userPermissions.Any(p => p.Name == "Create Companies");
+            
+            // Obtener permisos por rol
+            foreach (var roleName in _userRoles)
+            {
+                var role = await RoleService.GetRoleByNameAsync(roleName);
+                if (role != null)
+                {
+                    var permissions = await PermissionService.GetRolePermissionsAsync(role.Id);
+                    _rolePermissions[roleName] = permissions;
+                    
+                    // Verificar si el rol tiene el permiso "Create Companies"
+                    if (permissions.Any(p => p.Name == "Create Companies"))
+                    {
+                        _hasCreateCompaniesPermissionViaRoles = true;
+                        _rolesWithCreateCompaniesPermission.Add(roleName);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Error al cargar los datos: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

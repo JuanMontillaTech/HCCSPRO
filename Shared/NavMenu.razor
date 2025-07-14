@@ -2,57 +2,40 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components
 
-<div class="outlook-nav-container">
-    <div class="outlook-nav-header">
-        <button @onclick="ToggleNavMenu" class="menu-toggle-button">
-            <i class="oi oi-menu"></i>
-        </button>
+<div class="sidebar-nav">
+    <div class="sidebar-section">
+        <div class="sidebar-section-header">FAVORITOS</div>
+        <NavLink class="sidebar-item" href="" Match="NavLinkMatch.All">
+            <i class="oi oi-home"></i> Dashboard
+        </NavLink>
+        <NavLink class="sidebar-item" href="companies">
+            <i class="oi oi-briefcase"></i> Empresas
+        </NavLink>
     </div>
-
-    <div class="@NavMenuCssClass">
-        <div class="outlook-nav-section">
-            <div class="outlook-nav-section-header">Inicio</div>
-            <NavLink class="outlook-nav-item" href="" Match="NavLinkMatch.All">
-                <i class="oi oi-dashboard"></i> Dashboard
-            </NavLink>
-            
-        </div>
-
-        <div class="outlook-nav-section">
-            <NavLink class="outlook-nav-item" href="users">
-                <i class="oi oi-people"></i> Usuarios
-            </NavLink>
-            <div class="outlook-nav-section-header">Seguridad</div>
-            <NavLink class="outlook-nav-item" href="roles">
-                <i class="oi oi-badge"></i> Roles
-            </NavLink>
-            <NavLink class="outlook-nav-item" href="permissions">
-                <i class="oi oi-lock-locked"></i> Permisos
-            </NavLink>
-            <NavLink class="outlook-nav-item" href="companies">
-                <i class="oi oi-briefcase"></i> Empresas
-            </NavLink>
-        </div>
-
-        <div class="outlook-nav-section">
-            <div class="outlook-nav-section-header">Configuración</div>
-            <NavLink class="outlook-nav-item" href="profile">
-                <i class="oi oi-person"></i> Perfil
-            </NavLink>
-            <NavLink class="outlook-nav-item" href="settings">
-                <i class="oi oi-cog"></i> Configuración
-            </NavLink>
-        </div>
+    
+    <div class="sidebar-section">
+        <div class="sidebar-section-header">ADMINISTRACIÓN</div>
+        <NavLink class="sidebar-item" href="users">
+            <i class="oi oi-people"></i> Usuarios
+        </NavLink>
+        <NavLink class="sidebar-item" href="roles">
+            <i class="oi oi-badge"></i> Roles
+        </NavLink>
+        <NavLink class="sidebar-item" href="permissions">
+            <i class="oi oi-lock-locked"></i> Permisos
+        </NavLink>
+    </div>
+    
+    <div class="sidebar-section">
+        <div class="sidebar-section-header">SISTEMA</div>
+        <NavLink class="sidebar-item" href="permission-diagnostic">
+            <i class="oi oi-medical-cross"></i> Diagnóstico
+        </NavLink>
+        <NavLink class="sidebar-item" href="profile">
+            <i class="oi oi-person"></i> Perfil
+        </NavLink>
+        <NavLink class="sidebar-item" href="settings">
+            <i class="oi oi-cog"></i> Configuración
+        </NavLink>
     </div>
 </div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}

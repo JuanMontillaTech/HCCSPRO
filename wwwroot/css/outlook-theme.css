@@ -1,15 +1,41 @@
 /* Outlook-inspired Theme for ALGA System */
 
 :root {
+    /* Colores principales */
     --outlook-primary: #0078d4;
     --outlook-secondary: #106ebe;
-    --outlook-background: #f5f5f5;
-    --outlook-sidebar: #f0f0f0;
+    --outlook-primary-light: #2b88d8;
+    --outlook-background: #f3f2f1;
+    
+    /* Áreas de contenido */
+    --outlook-sidebar: #faf9f8;
     --outlook-header: #ffffff;
-    --outlook-text: #333333;
-    --outlook-border: #e1e1e1;
-    --outlook-hover: #e6f2fa;
-    --outlook-active: #d0e7f8;
+    --outlook-menu: #f3f2f1;
+    --outlook-content-bg: #ffffff;
+    
+    /* Texto y bordes */
+    --outlook-text: #323130;
+    --outlook-text-secondary: #605e5c;
+    --outlook-border: #edebe9;
+    --outlook-border-dark: #c8c6c4;
+    
+    /* Estados */
+    --outlook-hover: #f3f2f1;
+    --outlook-active: #edebe9;
+    --outlook-focus: rgba(0, 120, 212, 0.2);
+    
+    /* Iconos */
+    --outlook-icon-color: #605e5c;
+    --outlook-icon-active: #0078d4;
+
+    /* Notificaciones */
+    --outlook-notification: #c50f1f;
+    
+    /* Tamaños */
+    --header-height: 48px;
+    --menu-height: 40px;
+    --toolbar-height: 44px;
+    --sidebar-width: 240px;
 }
 
 /* Layout */
@@ -19,18 +45,176 @@
     height: 100vh;
     width: 100%;
     background-color: var(--outlook-background);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--outlook-text);
+}
+
+/* Footer */
+.outlook-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--outlook-header);
+    border-top: 1px solid var(--outlook-border);
+    color: var(--outlook-text-secondary);
+    font-size: 12px;
+    height: 40px;
 }
 
 /* Header */
 .outlook-header {
     display: flex;
+    flex-direction: column;
+    background-color: var(--outlook-header);
+    border-bottom: 1px solid var(--outlook-border);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Barra superior */
+.outlook-top-bar {
+    display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 16px;
+    height: var(--header-height);
     background-color: var(--outlook-header);
-    padding: 0 1rem;
-    height: 60px;
+}
+
+/* Logo */
+.outlook-logo {
+    display: flex;
+    align-items: center;
+    min-width: var(--sidebar-width);
+}
+
+.outlook-logo .brand-logo {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--outlook-primary);
+    text-decoration: none;
+}
+
+.outlook-logo .logo-image {
+    height: 28px;
+    margin-right: 8px;
+}
+
+/* Búsqueda */
+.outlook-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--outlook-hover);
+    border-radius: 4px;
+    height: 32px;
+    width: 320px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.outlook-search:hover, .outlook-search:focus-within {
+    background: var(--outlook-header);
+    border-color: var(--outlook-border-dark);
+    box-shadow: 0 0 0 1px var(--outlook-focus);
+}
+
+.outlook-search .search-icon {
+    position: absolute;
+    left: 8px;
+    color: var(--outlook-icon-color);
+    font-size: 14px;
+}
+
+.outlook-search input {
+    border: none;
+    background: transparent;
+    padding: 0 8px 0 30px;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    font-size: 14px;
+    color: var(--outlook-text);
+}
+
+/* Acciones */
+.outlook-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.outlook-action-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--outlook-icon-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.outlook-action-btn:hover {
+    background-color: var(--outlook-hover);
+    color: var(--outlook-primary);
+}
+
+.notification-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: var(--outlook-notification);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Barra de menú */
+.outlook-menu-bar {
+    display: flex;
+    background-color: var(--outlook-menu);
+    height: var(--menu-height);
+    align-items: center;
+    padding-left: 16px;
     border-bottom: 1px solid var(--outlook-border);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item {
+    padding: 0 16px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    background-color: var(--outlook-hover);
+}
+
+.menu-item.active {
+    border-bottom-color: var(--outlook-primary);
+    color: var(--outlook-primary);
+}
+
+.menu-item i {
+    font-size: 14px;
 }
 
 .outlook-brand {
@@ -38,15 +222,178 @@
     align-items: center;
 }
 
-.outlook-brand .logo {
-    height: 40px;
-    margin-right: 10px;
+.outlook-logo {
+    display: flex;
+    align-items: center;
 }
 
-.outlook-brand h1 {
-    font-size: 1.5rem;
-    margin: 0;
+.outlook-logo .brand-logo {
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--outlook-primary);
+    text-decoration: none;
+}
+
+/* Acciones y búsqueda */
+.outlook-search {
+    display: flex;
+    align-items: center;
+    background: var(--outlook-background);
+    border-radius: 4px;
+    padding: 0 8px;
+    height: 32px;
+    width: 300px;
+}
+
+.outlook-search input {
+    border: none;
+    background: transparent;
+    flex-grow: 1;
+    outline: none;
+    font-size: 14px;
+}
+
+.outlook-search button {
+    border: none;
+    background: transparent;
+    color: var(--outlook-icon-color);
+    cursor: pointer;
+}
+
+.outlook-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.outlook-action-btn {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--outlook-icon-color);
+    cursor: pointer;
+}
+
+.outlook-action-btn:hover {
+    background-color: var(--outlook-hover);
+}
+
+/* Avatar */
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--outlook-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.avatar-circle.avatar-large {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+}
+
+/* User menu */
+.user-dropdown {
+    position: relative;
+}
+
+.user-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-dropdown-toggle:hover {
+    background-color: var(--outlook-hover);
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    border: 1px solid var(--outlook-border-dark);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    min-width: 280px;
+    z-index: 1000;
+    display: none;
+    padding: 8px 0;
+    margin-top: 8px;
+}
+
+.user-dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--outlook-border);
+    margin-bottom: 8px;
+}
+
+.user-info-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--outlook-text);
+}
+
+.user-email {
+    font-size: 12px;
+    color: var(--outlook-text-secondary);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--outlook-text);
+    font-size: 14px;
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--outlook-hover);
+    color: var(--outlook-primary);
+}
+
+.dropdown-item i {
+    font-size: 16px;
+    width: 20px;
+    color: var(--outlook-icon-color);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--outlook-border);
+    margin: 4px 0;
 }
 
 .outlook-search {
@@ -93,20 +440,200 @@
     margin-right: 5px;
 }
 
-/* Body */
-.outlook-body {
+/* Main container */
+.outlook-container {
     display: flex;
-    flex: 1;
-    overflow: hidden;
+    height: calc(100vh - var(--header-height) - var(--menu-height));
+    position: relative;
 }
 
 /* Sidebar */
 .outlook-sidebar {
-    width: 240px;
+    width: var(--sidebar-width);
     background-color: var(--outlook-sidebar);
     border-right: 1px solid var(--outlook-border);
     overflow-y: auto;
     flex-shrink: 0;
+    transition: width 0.3s ease;
+}
+
+.outlook-sidebar.collapsed {
+    width: 48px;
+}
+
+.outlook-sidebar.collapsed .sidebar-title,
+.outlook-sidebar.collapsed .sidebar-section-header,
+.outlook-sidebar.collapsed .sidebar-item span {
+    display: none;
+}
+
+.outlook-sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+.outlook-sidebar.collapsed .sidebar-item {
+    padding: 12px;
+    justify-content: center;
+}
+
+.outlook-sidebar-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--outlook-border);
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--outlook-text);
+}
+
+.sidebar-toggle {
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--outlook-icon-color);
+    cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+    background-color: var(--outlook-hover);
+}
+
+.outlook-sidebar-content {
+    padding: 8px 0;
+}
+
+.sidebar-section {
+    margin-bottom: 12px;
+}
+
+.sidebar-section-header {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--outlook-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    color: var(--outlook-text);
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-item:hover {
+    background-color: var(--outlook-hover);
+}
+
+.sidebar-item.active {
+    background-color: var(--outlook-active);
+    color: var(--outlook-primary);
+    border-left-color: var(--outlook-primary);
+}
+
+.sidebar-item i {
+    font-size: 16px;
+    color: var(--outlook-icon-color);
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-item.active i {
+    color: var(--outlook-primary);
+}
+
+/* Content area */
+.outlook-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--outlook-content-bg);
+}
+
+/* Toolbar */
+.outlook-toolbar {
+    background-color: var(--outlook-header);
+    border-bottom: 1px solid var(--outlook-border);
+    padding: 0 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: var(--toolbar-height);
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.toolbar-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    height: 32px;
+    border: none;
+    background-color: transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--outlook-text);
+    transition: all 0.15s ease;
+}
+
+.toolbar-button:hover {
+    background-color: var(--outlook-hover);
+}
+
+.toolbar-button.primary-action {
+    background-color: var(--outlook-primary);
+    color: white;
+}
+
+.toolbar-button.primary-action:hover {
+    background-color: var(--outlook-primary-light);
+}
+
+.toolbar-button i {
+    font-size: 16px;
+}
+
+.separator {
+    width: 1px;
+    height: 24px;
+    background-color: var(--outlook-border-dark);
+    margin: 0 4px;
+}
+
+/* Main content */
+.outlook-main-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: var(--outlook-background);
+}
+
+.content-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Navigation */
@@ -131,32 +658,27 @@
 }
 
 .outlook-nav-section {
-    margin-bottom: 20px;
-    padding-top: 10px;
+    margin-bottom: 1rem;
 }
 
 .outlook-nav-section-header {
-    padding: 5px 15px;
-    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
     font-weight: 600;
-    color: #666;
+    color: var(--outlook-text);
+    font-size: 0.875rem;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .outlook-nav-item {
     display: flex;
     align-items: center;
-    padding: 10px 15px;
+    padding: 8px 16px;
     color: var(--outlook-text);
     text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.outlook-nav-item i {
-    margin-right: 10px;
-    width: 16px;
-    text-align: center;
+    border-left: 3px solid transparent;
+    font-size: 14px;
+    transition: background-color 0.15s ease;
 }
 
 .outlook-nav-item:hover {
@@ -166,73 +688,28 @@
 .outlook-nav-item.active {
     background-color: var(--outlook-active);
     color: var(--outlook-primary);
-    border-left: 3px solid var(--outlook-primary);
+    border-left-color: var(--outlook-primary);
+    font-weight: 500;
 }
 
-/* Content */
-.outlook-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+.outlook-nav-item i {
+    margin-right: 12px;
+    font-size: 16px;
+    color: var(--outlook-icon-color);
 }
 
-/* Toolbar */
-.outlook-toolbar {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    background-color: #fff;
-    border-bottom: 1px solid var(--outlook-border);
-}
-
-.toolbar-group {
-    display: flex;
-    margin-right: 20px;
-}
-
-.toolbar-button {
-    display: flex;
-    align-items: center;
-    background: none;
-    border: none;
-    padding: 8px 12px;
-    margin-right: 5px;
-    cursor: pointer;
-    color: var(--outlook-text);
-    border-radius: 3px;
-    transition: background-color 0.2s;
-}
-
-.toolbar-button:hover {
-    background-color: var(--outlook-hover);
-}
-
-.toolbar-button i {
-    margin-right: 5px;
-}
-
-/* Main Content */
-.outlook-main-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-/* Footer */
-.outlook-footer {
-    padding: 10px 20px;
-    background-color: var(--outlook-header);
-    border-top: 1px solid var(--outlook-border);
-    color: #666;
-    font-size: 0.8rem;
-    text-align: center;
+.outlook-nav-item.active i {
+    color: var(--outlook-primary);
 }
 
 /* Cards */
 .outlook-card {
     background-color: #fff;
+    border: 1px solid var(--outlook-border);
     border-radius: 4px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
 }
