@@ -2,11 +2,12 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Forms
 @inject NavigationManager NavigationManager
 @inject ALGASystem.Services.CustomAuthenticationStateProvider AuthStateProvider
 @inject ILogger<Login> Logger
 
-<PageTitle>Iniciar Sesión - ALGA System</PageTitle>
+<PageTitle>Iniciar Sesión - Hermanas de la caridad del cardenal sancha</PageTitle>
 
 <div class="row justify-content-center">
     <div class="col-md-6">
@@ -77,12 +78,12 @@
         
         if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("registered", out var registered))
         {
-            _successMessage = "Registration successful! You can now login.";
+            _successMessage = "¡Registro exitoso! Ahora puedes iniciar sesión.";
         }
         
         if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var returnUrl))
         {
-            Logger.LogInformation($"Login page loaded with returnUrl: {returnUrl}");
+            Logger.LogInformation($"Página de inicio de sesión cargada con URL de retorno: {returnUrl}");
         }
     }
 
@@ -90,42 +91,42 @@
     {
         try
         {
-            Logger.LogInformation($"Attempting login for user: {_loginModel.UserName}");
+            Logger.LogInformation($"Intentando iniciar sesión para el usuario: {_loginModel.UserName}");
             
             // Usar el CustomAuthenticationStateProvider para validar el usuario
             var result = await AuthStateProvider.ValidateUserAsync(_loginModel.UserName, _loginModel.Password);
             
             if (result)
             {
-                Logger.LogInformation($"Login successful for user: {_loginModel.UserName}");
+                Logger.LogInformation($"Inicio de sesión exitoso para el usuario: {_loginModel.UserName}");
                 
                 // Verificar si hay una URL de retorno
                 var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
                 var returnUrl = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query)
                     .TryGetValue("returnUrl", out var url) ? url.ToString() : "/Dashboard";
                 
-                Logger.LogInformation($"Redirecting to: {returnUrl}");
+                Logger.LogInformation($"Redirigiendo a: {returnUrl}");
                 NavigationManager.NavigateTo(returnUrl);
             }
             else
             {
-                Logger.LogWarning($"Login failed for user: {_loginModel.UserName}");
-                _errorMessage = "Invalid username or password.";
+                Logger.LogWarning($"Inicio de sesión fallido para el usuario: {_loginModel.UserName}");
+                _errorMessage = "Usuario o contraseña inválidos.";
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error during login");
-            _errorMessage = "An error occurred during login. Please try again.";
+            Logger.LogError(ex, "Error durante el inicio de sesión");
+            _errorMessage = "Ocurrió un error durante el inicio de sesión. Por favor, intente nuevamente.";
         }
     }
 
     public class LoginModel
     {
-        [Required(ErrorMessage = "Username is required")]
+        [Required(ErrorMessage = "El nombre de usuario es requerido")]
         public string UserName { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
+        [Required(ErrorMessage = "La contraseña es requerida")]
         public string Password { get; set; }
 
         public bool RememberMe { get; set; } = false;

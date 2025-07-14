@@ -29,44 +29,44 @@ namespace ALGASystem.Services
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            _logger.LogInformation("Getting authentication state");
+            _logger.LogInformation("Obteniendo estado de autenticación");
             var httpContext = _httpContextAccessor.HttpContext;
 
             if (httpContext == null)
             {
-                _logger.LogWarning("HttpContext is null");
+                _logger.LogWarning("El HttpContext es nulo");
                 return new AuthenticationState(_currentUser);
             }
 
             if (httpContext.User == null || !httpContext.User.Identity.IsAuthenticated)
             {
-                _logger.LogInformation("User is not authenticated via HttpContext");
+                _logger.LogInformation("El usuario no está autenticado a través del HttpContext");
                 
                 // Si el usuario no está autenticado en el HttpContext pero tenemos un _currentUser autenticado,
                 // usamos ese en su lugar (esto ayuda con la persistencia en Blazor Server)
                 if (_currentUser.Identity.IsAuthenticated)
                 {
-                    _logger.LogInformation("Using cached authenticated user");
+                    _logger.LogInformation("Usando usuario autenticado en caché");
                     return new AuthenticationState(_currentUser);
                 }
                 
-                _logger.LogInformation("No authenticated user found");
+                _logger.LogInformation("No se encontró usuario autenticado");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
-            _logger.LogInformation($"User is authenticated as: {httpContext.User.Identity.Name}");
+            _logger.LogInformation($"Usuario autenticado como: {httpContext.User.Identity.Name}");
             var user = await _userManager.GetUserAsync(httpContext.User);
 
             if (user == null)
             {
-                _logger.LogWarning("User found in HttpContext but not in UserManager");
+                _logger.LogWarning("Usuario encontrado en HttpContext pero no en UserManager");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
             // Verificar si el usuario está activo
             if (!user.IsActive)
             {
-                _logger.LogWarning($"User {user.UserName} is not active");
+                _logger.LogWarning($"El usuario {user.UserName} no está activo");
                 return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
@@ -77,7 +77,7 @@ namespace ALGASystem.Services
 
         public void NotifyAuthenticationStateChangedExternally()
         {
-            _logger.LogInformation("Authentication state changed externally");
+            _logger.LogInformation("El estado de autenticación ha cambiado externamente");
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
@@ -85,18 +85,18 @@ namespace ALGASystem.Services
         {
             try
             {
-                _logger.LogInformation($"Validating user: {username}");
+                _logger.LogInformation($"Validando usuario: {username}");
                 
                 var user = await _userManager.FindByNameAsync(username);
                 if (user == null)
                 {
-                    _logger.LogWarning($"User {username} not found");
+                    _logger.LogWarning($"Usuario {username} no encontrado");
                     return false;
                 }
 
                 if (!user.IsActive)
                 {
-                    _logger.LogWarning($"User {username} is not active");
+                    _logger.LogWarning($"El usuario {username} no está activo");
                     return false;
                 }
 
@@ -105,7 +105,7 @@ namespace ALGASystem.Services
                 
                 if (isPasswordValid)
                 {
-                    _logger.LogInformation($"User {username} authenticated successfully");
+                    _logger.LogInformation($"Usuario {username} autenticado exitosamente");
                     
                     // Crear claims para el usuario
                     var claims = new List<Claim>
@@ -134,19 +134,19 @@ namespace ALGASystem.Services
                     return true;
                 }
                 
-                _logger.LogWarning($"Invalid password for user {username}");
+                _logger.LogWarning($"Contraseña inválida para el usuario {username}");
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error validating user {username}");
+                _logger.LogError(ex, $"Error al validar el usuario {username}");
                 return false;
             }
         }
 
         public void MarkUserAsAuthenticated(string userName)
         {
-            _logger.LogInformation($"Marking user as authenticated: {userName}");
+            _logger.LogInformation($"Marcando al usuario como autenticado: {userName}");
             var identity = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, userName)
@@ -157,7 +157,7 @@ namespace ALGASystem.Services
 
         public void MarkUserAsLoggedOut()
         {
-            _logger.LogInformation("Marking user as logged out");
+            _logger.LogInformation("Marcando al usuario como desconectado");
             _currentUser = new ClaimsPrincipal(new ClaimsIdentity());
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }

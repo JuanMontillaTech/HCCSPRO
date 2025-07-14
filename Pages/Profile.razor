@@ -1,17 +1,19 @@
 @page "/profile"
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserService UserService
 @inject IRoleService RoleService
 @inject IPermissionService PermissionService
 
-<PageTitle>My Profile - ALGA System</PageTitle>
+<PageTitle>Mi Perfil - ALGA System</PageTitle>
 
 <div class="row">
     <div class="col-md-4">
         <div class="outlook-card">
             <div class="outlook-card-header">
-                <h3>Profile Information</h3>
+                <h3>Información del Perfil</h3>
             </div>
             <div class="outlook-card-body">
                 @if (_loading)
@@ -20,13 +22,13 @@
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="mt-2">Loading profile...</p>
+                        <p class="mt-2">Cargando perfil...</p>
                     </div>
                 }
                 else if (_currentUser == null)
                 {
                     <div class="alert alert-warning">
-                        <i class="oi oi-warning"></i> Unable to load user profile.
+                        <i class="oi oi-warning"></i> No se puede cargar el perfil de usuario.
                     </div>
                 }
                 else
@@ -40,27 +42,27 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
+                        <label class="form-label">Nombre de usuario</label>
                         <input type="text" class="form-control" value="@_currentUser.UserName" readonly />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">Correo electrónico</label>
                         <input type="email" class="form-control" value="@_currentUser.Email" readonly />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">First Name</label>
+                        <label class="form-label">Nombre</label>
                         <input type="text" class="form-control" @bind="_profileModel.FirstName" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Last Name</label>
+                        <label class="form-label">Apellido</label>
                         <input type="text" class="form-control" @bind="_profileModel.LastName" />
                     </div>
 
                     <button class="outlook-btn outlook-btn-primary w-100" @onclick="UpdateProfile">
-                        <i class="oi oi-pencil"></i> Update Profile
+                        <i class="oi oi-pencil"></i> Actualizar Perfil
                     </button>
                 }
             </div>
@@ -70,7 +72,7 @@
     <div class="col-md-8">
         <div class="outlook-card mb-4">
             <div class="outlook-card-header">
-                <h3>Change Password</h3>
+                <h3>Cambiar Contraseña</h3>
             </div>
             <div class="outlook-card-body">
                 <EditForm Model="@_passwordModel" OnValidSubmit="ChangePassword">
@@ -78,22 +80,22 @@
                     <ValidationSummary />
 
                     <div class="mb-3">
-                        <label class="form-label">Current Password</label>
+                        <label class="form-label">Contraseña Actual</label>
                         <InputText type="password" class="form-control" @bind-Value="_passwordModel.CurrentPassword" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">New Password</label>
+                        <label class="form-label">Nueva Contraseña</label>
                         <InputText type="password" class="form-control" @bind-Value="_passwordModel.NewPassword" />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Confirm New Password</label>
+                        <label class="form-label">Confirmar Nueva Contraseña</label>
                         <InputText type="password" class="form-control" @bind-Value="_passwordModel.ConfirmPassword" />
                     </div>
 
                     <button type="submit" class="outlook-btn outlook-btn-primary">
-                        <i class="oi oi-lock-locked"></i> Change Password
+                        <i class="oi oi-lock-locked"></i> Cambiar Contraseña
                     </button>
                 </EditForm>
             </div>
@@ -101,7 +103,7 @@
 
         <div class="outlook-card">
             <div class="outlook-card-header">
-                <h3>My Roles and Permissions</h3>
+                <h3>Mis Roles y Permisos</h3>
             </div>
             <div class="outlook-card-body">
                 @if (_loading)
@@ -114,10 +116,10 @@
                 }
                 else
                 {
-                    <h4>Assigned Roles</h4>
+                    <h4>Roles Asignados</h4>
                     @if (!_userRoles.Any())
                     {
-                        <div class="alert alert-info">No roles assigned.</div>
+                        <div class="alert alert-info">No hay roles asignados.</div>
                     }
                     else
                     {
@@ -131,10 +133,10 @@
                         </ul>
                     }
 
-                    <h4>Effective Permissions</h4>
+                    <h4 class="mt-4">Permisos Efectivos</h4>
                     @if (!_effectivePermissions.Any())
                     {
-                        <div class="alert alert-info">No permissions assigned.</div>
+                        <div class="alert alert-info">No hay permisos asignados.</div>
                     }
                     else
                     {
@@ -257,12 +259,12 @@
             
             if (result.Succeeded)
             {
-                _successMessage = "Profile updated successfully.";
+                _successMessage = "Perfil actualizado exitosamente.";
                 _showSuccessMessage = true;
             }
             else
             {
-                _errorMessage = "Failed to update profile.";
+                _errorMessage = "Error al actualizar el perfil.";
                 _showErrorMessage = true;
             }
         }
@@ -274,7 +276,7 @@
         {
             if (_passwordModel.NewPassword != _passwordModel.ConfirmPassword)
             {
-                _errorMessage = "New password and confirmation do not match.";
+                _errorMessage = "La nueva contraseña y su confirmación no coinciden.";
                 _showErrorMessage = true;
                 return;
             }
@@ -286,13 +288,13 @@
             
             if (result.Succeeded)
             {
-                _successMessage = "Password changed successfully.";
+                _successMessage = "Contraseña cambiada exitosamente.";
                 _showSuccessMessage = true;
                 _passwordModel = new PasswordModel();
             }
             else
             {
-                _errorMessage = "Failed to change password. Please ensure your current password is correct.";
+                _errorMessage = "Error al cambiar la contraseña. Por favor, asegúrese de que su contraseña actual sea correcta.";
                 _showErrorMessage = true;
             }
         }
@@ -300,24 +302,24 @@
 
     private class ProfileModel
     {
-        [Required(ErrorMessage = "First name is required")]
+        [Required(ErrorMessage = "El nombre es requerido")]
         public string FirstName { get; set; }
         
-        [Required(ErrorMessage = "Last name is required")]
+        [Required(ErrorMessage = "El apellido es requerido")]
         public string LastName { get; set; }
     }
 
     private class PasswordModel
     {
-        [Required(ErrorMessage = "Current password is required")]
+        [Required(ErrorMessage = "La contraseña actual es requerida")]
         public string CurrentPassword { get; set; }
         
-        [Required(ErrorMessage = "New password is required")]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        [Required(ErrorMessage = "La nueva contraseña es requerida")]
+        [StringLength(100, ErrorMessage = "La {0} debe tener al menos {2} caracteres de longitud.", MinimumLength = 6)]
         public string NewPassword { get; set; }
         
-        [Required(ErrorMessage = "Password confirmation is required")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [Required(ErrorMessage = "La confirmación de contraseña es requerida")]
+        [Compare("NewPassword", ErrorMessage = "La nueva contraseña y su confirmación no coinciden.")]
         public string ConfirmPassword { get; set; }
     }
 }

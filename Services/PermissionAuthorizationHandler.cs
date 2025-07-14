@@ -40,17 +40,17 @@ namespace ALGASystem.Services
         {
             try
             {
-                _logger.LogInformation($"Checking permission: {requirement.Permission}");
+                _logger.LogInformation($"Verificando permiso: {requirement.Permission}");
                 
                 if (context.User == null)
                 {
-                    _logger.LogWarning("Authorization failed: User is null");
+                    _logger.LogWarning("Autorización fallida: El usuario es nulo");
                     return;
                 }
                 
                 if (!context.User.Identity.IsAuthenticated)
                 {
-                    _logger.LogWarning("Authorization failed: User is not authenticated");
+                    _logger.LogWarning("Autorización fallida: El usuario no está autenticado");
                     return;
                 }
 
@@ -58,30 +58,30 @@ namespace ALGASystem.Services
                 var user = await _userManager.GetUserAsync(context.User);
                 if (user == null)
                 {
-                    _logger.LogWarning("Authorization failed: Unable to retrieve user from UserManager");
+                    _logger.LogWarning("Autorización fallida: No se pudo recuperar el usuario desde UserManager");
                     return;
                 }
                 
-                _logger.LogInformation($"Checking permissions for user: {user.UserName} (ID: {user.Id})");
+                _logger.LogInformation($"Verificando permisos para el usuario: {user.UserName} (ID: {user.Id})");
 
                 // Check if user is active
                 if (!user.IsActive)
                 {
-                    _logger.LogWarning($"Authorization failed: User {user.UserName} is not active");
+                    _logger.LogWarning($"Autorización fallida: El usuario {user.UserName} no está activo");
                     return;
                 }
 
                 // Get user roles
                 var roles = await _userManager.GetRolesAsync(user);
-                _logger.LogInformation($"User has roles: {string.Join(", ", roles)}");
+                _logger.LogInformation($"El usuario tiene los roles: {string.Join(", ", roles)}");
                 
                 // Check if user has direct permission
                 var userPermissions = await _permissionService.GetUserPermissionsAsync(user.Id);
-                _logger.LogInformation($"User has {userPermissions.Count()} direct permissions");
+                _logger.LogInformation($"El usuario tiene {userPermissions.Count()} permisos directos");
                 
                 if (userPermissions.Any(p => p.Name == requirement.Permission))
                 {
-                    _logger.LogInformation($"User has direct permission: {requirement.Permission}");
+                    _logger.LogInformation($"El usuario tiene permiso directo: {requirement.Permission}");
                     context.Succeed(requirement);
                     return;
                 }
@@ -93,22 +93,22 @@ namespace ALGASystem.Services
                     if (role != null)
                     {
                         var rolePermissions = await _permissionService.GetRolePermissionsAsync(role.Id);
-                        _logger.LogInformation($"Role {roleName} has {rolePermissions.Count()} permissions");
+                        _logger.LogInformation($"El rol {roleName} tiene {rolePermissions.Count()} permisos");
                         
                         if (rolePermissions.Any(p => p.Name == requirement.Permission))
                         {
-                            _logger.LogInformation($"Role {roleName} has permission: {requirement.Permission}");
+                            _logger.LogInformation($"El rol {roleName} tiene permiso: {requirement.Permission}");
                             context.Succeed(requirement);
                             return;
                         }
                     }
                 }
                 
-                _logger.LogWarning($"Authorization failed: User {user.UserName} does not have permission {requirement.Permission}");
+                _logger.LogWarning($"Autorización fallida: El usuario {user.UserName} no tiene el permiso {requirement.Permission}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error checking permission {requirement.Permission}");
+                _logger.LogError(ex, $"Error al verificar el permiso {requirement.Permission}");
             }
         }
     }

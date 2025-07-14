@@ -140,7 +140,7 @@ namespace ALGASystem.Services
             var permission = await _context.Permissions.FindAsync(permissionId);
             if (permission == null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Permission not found" });
+                return IdentityResult.Failed(new IdentityError { Description = "Permiso no encontrado" });
             }
 
             var existingPermission = await _context.UserPermissions
@@ -148,7 +148,7 @@ namespace ALGASystem.Services
 
             if (existingPermission != null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Permission already assigned to user" });
+                return IdentityResult.Failed(new IdentityError { Description = "Permiso ya asignado al usuario" });
             }
 
             var userPermission = new UserPermission
@@ -170,7 +170,7 @@ namespace ALGASystem.Services
 
             if (userPermission == null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "User does not have this permission" });
+                return IdentityResult.Failed(new IdentityError { Description = "El usuario no tiene este permiso" });
             }
 
             _userPermissionRepository.Remove(userPermission);

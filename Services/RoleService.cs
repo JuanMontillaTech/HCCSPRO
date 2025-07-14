@@ -72,7 +72,7 @@ namespace ALGASystem.Services
             var permission = await _context.Permissions.FindAsync(permissionId);
             if (permission == null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Permission not found" });
+                return IdentityResult.Failed(new IdentityError { Description = "Permiso no encontrado" });
             }
 
             var existingPermission = await _context.RolePermissions
@@ -80,7 +80,7 @@ namespace ALGASystem.Services
 
             if (existingPermission != null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Permission already assigned to role" });
+                return IdentityResult.Failed(new IdentityError { Description = "Permiso ya asignado al rol" });
             }
 
             var rolePermission = new RolePermission
@@ -102,7 +102,7 @@ namespace ALGASystem.Services
 
             if (rolePermission == null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Role does not have this permission" });
+                return IdentityResult.Failed(new IdentityError { Description = "El rol no tiene este permiso" });
             }
 
             _rolePermissionRepository.Remove(rolePermission);
