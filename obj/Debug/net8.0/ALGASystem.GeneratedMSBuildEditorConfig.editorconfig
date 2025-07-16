@@ -116,6 +116,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEN1c3RvbVBhZ2VUaXRsZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Proyectos/ALGA/ALGASystem/Shared/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEVtcHR5TGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Proyectos/ALGA/ALGASystem/Shared/PageTitleComponent.razor]
 build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFBhZ2VUaXRsZUNvbXBvbmVudC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

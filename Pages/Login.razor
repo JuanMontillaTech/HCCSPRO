@@ -1,24 +1,29 @@
 @page "/login"
+@page "/"
+@layout EmptyLayout
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager NavigationManager
 @inject ALGASystem.Services.CustomAuthenticationStateProvider AuthStateProvider
 @inject ILogger<Login> Logger
 
-<PageTitle>Iniciar Sesión - Hermanas de la caridad del cardenal sancha</PageTitle>
+<PageTitle>Iniciar Sesión - ALGA System</PageTitle>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="outlook-card mt-5">
-            <div class="outlook-card-header text-center">
-                <h3><i class="oi oi-account-login me-2"></i> Iniciar Sesión</h3>
-            </div>
-            <div class="outlook-card-body">
-                <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+            <div class="card shadow outlook-card">
+                <div class="card-header outlook-card-header text-center py-4">
+                    <h2 class="mb-0"><i class="oi oi-account-login me-2"></i> Iniciar Sesión</h2>
+                </div>
+                <div class="card-body outlook-card-body p-4">
+                    <EditForm Model="@_loginModel" OnValidSubmit="HandleLogin" @onkeydown="HandleKeyDown">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger mb-3" />
 
                     @if (!string.IsNullOrEmpty(_errorMessage))
                     {
@@ -34,42 +39,48 @@
                         </div>
                     }
 
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Usuario</label>
-                        <InputText id="username" @bind-Value="_loginModel.UserName" class="form-control" />
-                        <ValidationMessage For="@(() => _loginModel.UserName)" />
-                    </div>
+                        <div class="mb-4">
+                            <label for="username" class="form-label fw-bold">Correo electrónico o usuario</label>
+                            <InputText id="username" @bind-Value="_loginModel.UserName" class="form-control form-control-lg" placeholder="Ingrese su correo o usuario" autocomplete="username" @ref="_firstInput" />
+                            <ValidationMessage For="@(() => _loginModel.UserName)" class="text-danger" />
+                        </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <InputText id="password" type="password" @bind-Value="_loginModel.Password" class="form-control" />
-                        <ValidationMessage For="@(() => _loginModel.Password)" />
-                    </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label fw-bold">Contraseña</label>
+                            <InputText id="password" type="password" @bind-Value="_loginModel.Password" class="form-control form-control-lg" placeholder="Ingrese su contraseña" autocomplete="current-password" />
+                            <ValidationMessage For="@(() => _loginModel.Password)" class="text-danger" />
+                        </div>
 
-                    <div class="mb-3 form-check">
-                        <InputCheckbox id="rememberMe" @bind-Value="_loginModel.RememberMe" class="form-check-input" />
-                        <label class="form-check-label" for="rememberMe">Recordarme</label>
-                    </div>
+                        <div class="mb-4 form-check">
+                            <InputCheckbox id="rememberMe" @bind-Value="_loginModel.RememberMe" class="form-check-input" />
+                            <label class="form-check-label" for="rememberMe">Recordarme</label>
+                        </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="outlook-btn outlook-btn-primary">
-                            <i class="oi oi-account-login me-2"></i> Iniciar Sesión
-                        </button>
-                    </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg outlook-btn outlook-btn-primary">
+                                <i class="oi oi-account-login me-2"></i> Iniciar Sesión
+                            </button>
+                        </div>
                 </EditForm>
 
-                <div class="mt-3 text-center">
-                    <a href="/register" class="outlook-link">¿No tienes una cuenta? Regístrate</a>
-                </div>
+                    <div class="mt-4 text-center">
+                        <hr />
+                        <p class="mb-0">¿Olvidaste tu contraseña? <a href="/forgot-password" class="outlook-link">Recuperar</a></p>
+                    </div>
+            </div>
+            <div class="card-footer text-center py-3 text-muted">
+                <small>&copy; @DateTime.Now.Year - ALGA System</small>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 @code {
     private LoginModel _loginModel = new LoginModel();
     private string _errorMessage = string.Empty;
     private string _successMessage = string.Empty;
+    private InputText _firstInput;
 
     protected override void OnInitialized()
     {
@@ -84,6 +95,15 @@
         if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var returnUrl))
         {
             Logger.LogInformation($"Página de inicio de sesión cargada con URL de retorno: {returnUrl}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _firstInput != null)
+        {
+            await Task.Delay(100); // Small delay to ensure the element is fully rendered
+            await _firstInput.Element.Value.FocusAsync();
         }
     }
 
@@ -121,14 +141,50 @@
         }
     }
 
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            HandleLogin();
+        }
+    }
+
     public class LoginModel
     {
-        [Required(ErrorMessage = "El nombre de usuario es requerido")]
+        [Required(ErrorMessage = "El nombre de usuario o correo es requerido")]
+        [Display(Name = "Correo electrónico o usuario")]
+        [EmailOrUsername(ErrorMessage = "Formato de correo electrónico inválido")]
         public string UserName { get; set; }
 
         [Required(ErrorMessage = "La contraseña es requerida")]
+        [Display(Name = "Contraseña")]
         public string Password { get; set; }
 
+        [Display(Name = "Recordarme")]
         public bool RememberMe { get; set; } = false;
+    }
+    
+    // Validador personalizado que acepta ya sea un correo válido o un nombre de usuario
+    public class EmailOrUsernameAttribute : ValidationAttribute
+    {
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            if (value == null)
+                return ValidationResult.Success; // Required attribute will handle this
+
+            string input = value.ToString();
+            
+            // Si contiene @ debe ser un formato de correo válido
+            if (input.Contains("@"))
+            {
+                // Expresión para validar formato de correo
+                var regex = new System.Text.RegularExpressions.Regex(@"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+                
+                if (!regex.IsMatch(input))
+                    return new ValidationResult(ErrorMessage);
+            }
+            
+            return ValidationResult.Success;
+        }
     }
 }
