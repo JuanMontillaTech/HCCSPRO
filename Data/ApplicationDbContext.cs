@@ -15,6 +15,7 @@ namespace ALGASystem.Data
         public DbSet<RolePermission> RolePermissions { get; set; }
         public DbSet<UserPermission> UserPermissions { get; set; }
         public DbSet<Company> Companies { get; set; }
+        public DbSet<CompanyUser> CompanyUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -48,6 +49,30 @@ namespace ALGASystem.Data
                 .HasOne(up => up.Permission)
                 .WithMany(p => p.UserPermissions)
                 .HasForeignKey(up => up.PermissionId);
+                
+            // Configurar CompanyUser
+            builder.Entity<CompanyUser>()
+                .HasKey(cu => cu.Id);
+                
+            builder.Entity<CompanyUser>()
+                .HasIndex(cu => new { cu.CompanyId, cu.UserId })
+                .IsUnique();
+                
+            builder.Entity<CompanyUser>()
+                .HasOne(cu => cu.Company)
+                .WithMany()
+                .HasForeignKey(cu => cu.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            builder.Entity<CompanyUser>()
+                .HasOne(cu => cu.User)
+                .WithMany()
+                .HasForeignKey(cu => cu.UserId);
+                
+            builder.Entity<CompanyUser>()
+                .Property(cu => cu.Role)
+                .IsRequired()
+                .HasMaxLength(20);
         }
     }
 }

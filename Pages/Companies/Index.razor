@@ -1,10 +1,15 @@
 @page "/companies"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using ALGASystem.Services.Interfaces
+@using ALGASystem.Shared
+@using Microsoft.AspNetCore.Components.Web
 @attribute [Authorize(Policy = "ViewCompanies")]
 @inject ICompanyService CompanyService
 @inject NavigationManager NavigationManager
 @inject ILogger<Index> Logger
 
-<PageTitle>Empresas - Hermanas de la caridad del cardenal sancha</PageTitle>
+<PageTitle>Empresas - ALGA System</PageTitle>
 
 <div class="outlook-card">
     <div class="outlook-card-header">
@@ -86,6 +91,14 @@
                                                 <button class="outlook-btn outlook-btn-primary" 
                                                     @onclick="() => NavigateToForm(company.Id)">
                                                     <i class="oi oi-pencil"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="ManageCompanyUsers">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-info" 
+                                                    @onclick="() => NavigateToCompanyUsers(company.Id)">
+                                                    <i class="oi oi-people"></i>
                                                 </button>
                                             </Authorized>
                                         </AuthorizeView>
@@ -174,13 +187,18 @@
         }
         else
         {
-            NavigationManager.NavigateTo("/companies/create");
+            NavigationManager.NavigateTo("/companies/new");
         }
     }
 
     private void NavigateToDetail(Guid id)
     {
-        NavigationManager.NavigateTo($"/companies/detail/{id}");
+        NavigationManager.NavigateTo($"/companies/{id}");
+    }
+
+    private void NavigateToCompanyUsers(Guid id)
+    {
+        NavigationManager.NavigateTo($"/companies/{id}/users");
     }
 
     private void ConfirmStatusChange(Company company)

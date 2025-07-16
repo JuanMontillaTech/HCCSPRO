@@ -1,0 +1,265 @@
+@page "/usermanagement/{id}/companies"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@using ALGASystem.Shared
+@attribute [Authorize(Policy = "ManageCompanyUsers")]
+
+@inject ICompanyUserService CompanyUserService
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="page-container">
+
+    @if (_user == null)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando información del usuario...</p>
+        </div>
+    }
+    else
+    {
+        <div class="outlook-card">
+            <div class="outlook-card-header">
+                <h3>Empresas asignadas a: @_user.Email</h3>
+                <div class="outlook-card-header-actions">
+                    <button class="outlook-btn outlook-btn-secondary" @onclick="NavigateBack">
+                        <i class="oi oi-arrow-left"></i> Volver
+                    </button>
+                </div>
+            </div>
+            <div class="outlook-card-body">
+                @if (!_companyUsers.Any())
+                {
+                    <div class="alert alert-info">
+                        <p>Este usuario no tiene empresas asignadas actualmente.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Empresa</th>
+                                <th>Rol</th>
+                                <th>Fecha de Asignación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var companyUser in _companyUsers)
+                            {
+                                <tr>
+                                    <td>@companyUser.Company?.Name</td>
+                                    <td>@companyUser.Role</td>
+                                    <td>@companyUser.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            @if (IsUserAuthorized("ManageCompanyUsers"))
+                                            {
+                                                <button class="outlook-btn outlook-btn-primary" 
+                                                    @onclick="() => OpenEditRoleModal(companyUser)">
+                                                    <i class="oi oi-pencil"></i>
+                                                </button>
+                                                <button class="outlook-btn outlook-btn-danger" 
+                                                    @onclick="() => OpenDeleteModal(companyUser)">
+                                                    <i class="oi oi-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@if (_showEditModal && _selectedCompanyUser != null)
+{
+    <div class="modal modal-open">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar rol de usuario</h5>
+                    <button type="button" class="close" @onclick="CloseModals">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="role">Rol:</label>
+                        <select id="role" class="form-control" @bind="_selectedCompanyUser.Role">
+                            @foreach (var role in _availableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn" @onclick="CloseModals">Cancelar</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="UpdateCompanyUserRole">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showDeleteModal && _selectedCompanyUser != null)
+{
+    <div class="modal modal-open">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar asignación</h5>
+                    <button type="button" class="close" @onclick="CloseModals">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar el acceso del usuario @_user?.Email a la empresa @_selectedCompanyUser?.Company?.Name?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn" @onclick="CloseModals">Cancelar</button>
+                    <button type="button" class="outlook-btn outlook-btn-danger" @onclick="DeleteCompanyUser">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private ApplicationUser _user;
+    private List<CompanyUser> _companyUsers = new List<CompanyUser>();
+    private IEnumerable<string> _availableRoles = new List<string>();
+    
+    private bool _showEditModal = false;
+    private bool _showDeleteModal = false;
+    private CompanyUser _selectedCompanyUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("document.title", "Empresas Asignadas al Usuario - ALGA System");
+        _availableRoles = CompanyUserService.GetAvailableRoles();
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            _user = await UserService.GetUserByIdAsync(Id);
+            
+            if (_user != null)
+            {
+                _companyUsers = await CompanyUserService.GetCompaniesByUserIdAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"Error al cargar los datos: {ex.Message}");
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/usermanagement");
+    }
+
+    private void OpenEditRoleModal(CompanyUser companyUser)
+    {
+        _selectedCompanyUser = companyUser;
+        _showEditModal = true;
+    }
+
+    private void OpenDeleteModal(CompanyUser companyUser)
+    {
+        _selectedCompanyUser = companyUser;
+        _showDeleteModal = true;
+    }
+
+    private void CloseModals()
+    {
+        _showEditModal = false;
+        _showDeleteModal = false;
+    }
+
+    private async Task UpdateCompanyUserRole()
+    {
+        try
+        {
+            if (_selectedCompanyUser != null)
+            {
+                var success = await CompanyUserService.UpdateCompanyUserAsync(_selectedCompanyUser);
+                if (success)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Rol actualizado correctamente.");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Error al actualizar el rol.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseModals();
+            await LoadUserData(); // Recargar los datos
+        }
+    }
+
+    private async Task DeleteCompanyUser()
+    {
+        try
+        {
+            if (_selectedCompanyUser != null)
+            {
+                var success = await CompanyUserService.RemoveCompanyUserAsync(_selectedCompanyUser.Id);
+                if (success)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Asignación eliminada correctamente.");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Error al eliminar la asignación.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+        finally
+        {
+            CloseModals();
+            await LoadUserData(); // Recargar los datos
+        }
+    }
+    
+    // Método para verificar si el usuario tiene una política determinada
+    private bool IsUserAuthorized(string policyName)
+    {
+        // En un caso real, esto debería verificar con el servicio de autorización
+        // Para mantenerlo simple y evitar dependencias adicionales, asumiremos que el usuario tiene permisos
+        // ya que está viendo esta página que requiere ManageCompanyUsers
+        return true;
+        
+        // Implementación adecuada requeriría algo como:
+        // return await AuthorizationService.AuthorizeAsync(User, policyName);
+    }
+}

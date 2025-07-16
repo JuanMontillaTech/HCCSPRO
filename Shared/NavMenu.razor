@@ -1,41 +1,57 @@
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject NavigationManager NavigationManager
 
 <div class="sidebar-nav">
     <div class="sidebar-section">
         <div class="sidebar-section-header">FAVORITOS</div>
-        <NavLink class="sidebar-item" href="" Match="NavLinkMatch.All">
+        <a class="sidebar-item @(IsActive("") ? "active" : "")" href="">
             <i class="oi oi-home"></i> Dashboard
-        </NavLink>
-        <NavLink class="sidebar-item" href="companies">
+        </a>
+        <a class="sidebar-item @(IsActive("companies") ? "active" : "")" href="companies">
             <i class="oi oi-briefcase"></i> Empresas
-        </NavLink>
+        </a>
     </div>
     
     <div class="sidebar-section">
         <div class="sidebar-section-header">ADMINISTRACIÓN</div>
-        <NavLink class="sidebar-item" href="users">
+        <a class="sidebar-item @(IsActive("usermanagement") ? "active" : "")" href="usermanagement">
             <i class="oi oi-people"></i> Usuarios
-        </NavLink>
-        <NavLink class="sidebar-item" href="roles">
+        </a>
+        <a class="sidebar-item @(IsActive("roles") ? "active" : "")" href="roles">
             <i class="oi oi-badge"></i> Roles
-        </NavLink>
-        <NavLink class="sidebar-item" href="permissions">
+        </a>
+        <a class="sidebar-item @(IsActive("permissions") ? "active" : "")" href="permissions">
             <i class="oi oi-lock-locked"></i> Permisos
-        </NavLink>
+        </a>
     </div>
     
     <div class="sidebar-section">
         <div class="sidebar-section-header">SISTEMA</div>
-        <NavLink class="sidebar-item" href="permission-diagnostic">
+        <a class="sidebar-item @(IsActive("permission-diagnostic") ? "active" : "")" href="permission-diagnostic">
             <i class="oi oi-medical-cross"></i> Diagnóstico
-        </NavLink>
-        <NavLink class="sidebar-item" href="profile">
+        </a>
+        <a class="sidebar-item @(IsActive("profile") ? "active" : "")" href="profile">
             <i class="oi oi-person"></i> Perfil
-        </NavLink>
-        <NavLink class="sidebar-item" href="settings">
+        </a>
+        <a class="sidebar-item @(IsActive("settings") ? "active" : "")" href="settings">
             <i class="oi oi-cog"></i> Configuración
-        </NavLink>
+        </a>
     </div>
 </div>
+
+@code {
+    private bool IsActive(string href)
+    {
+        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        
+        if (string.IsNullOrEmpty(href) && string.IsNullOrEmpty(currentUri))
+            return true;
+            
+        return !string.IsNullOrEmpty(currentUri) && 
+               currentUri.StartsWith(href, StringComparison.OrdinalIgnoreCase);
+    }
+}

@@ -1,0 +1,440 @@
+@page "/companies/{id:guid}/users"
+@using ALGASystem.Models
+@using ALGASystem.Services.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components
+@using ALGASystem.Shared
+@using System.Linq.Expressions
+@using System.ComponentModel.DataAnnotations
+@attribute [Authorize(Policy = "ManageCompanyUsers")]
+
+@inject ICompanyService CompanyService
+@inject ICompanyUserService CompanyUserService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div class="page-container">
+    @if (_loading || _company == null)
+    {
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <p>Cargando información de la empresa...</p>
+        </div>
+    }
+    else
+    {
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3>@_company.Name - Gestión de usuarios</h3>
+                        <div>
+                            <button class="outlook-btn outlook-btn-secondary" @onclick="NavigateBack">
+                                <i class="oi oi-arrow-left"></i> Volver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Asignar usuario</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form @onsubmit="AssignUser">
+                                        @if (!string.IsNullOrEmpty(_errorMessage))
+                                        {
+                                            <div class="alert alert-danger">
+                                                @_errorMessage
+                                            </div>
+                                        }
+
+                                        <div class="form-group mb-3">
+                                            <label for="email">Email del usuario:</label>
+                                            <input type="email" class="form-control" id="email" 
+                                                @bind="_newUserAssignment.Email" />
+                                            <div class="text-danger">@GetValidationMessage(() => _newUserAssignment.Email)</div>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label for="role">Rol en la empresa:</label>
+                                            <select class="form-control" id="role" @bind="_newUserAssignment.Role">
+                                                <option value="">Seleccione un rol</option>
+                                                @foreach (var role in _availableRoles)
+                                                {
+                                                    <option value="@role">@role</option>
+                                                }
+                                            </select>
+                                            <div class="text-danger">@GetValidationMessage(() => _newUserAssignment.Role)</div>
+                                        </div>
+
+                                        <div class="form-group text-end">
+                                            <button type="submit" class="outlook-btn outlook-btn-primary">
+                                                <i class="oi oi-plus"></i> Asignar Usuario
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">Usuarios asignados</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (_companyUsers.Count == 0)
+                            {
+                                <div class="alert alert-info">
+                                    No hay usuarios asignados a esta empresa.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre de usuario</th>
+                                                <th>Email</th>
+                                                <th>Rol</th>
+                                                <th>Fecha asignación</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var companyUser in _companyUsers)
+                                            {
+                                                <tr>
+                                                    <td>@companyUser.User.UserName</td>
+                                                    <td>@companyUser.User.Email</td>
+                                                    <td>@companyUser.Role</td>
+                                                    <td>@companyUser.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            @if (IsUserAuthorized("ManageCompanyUsers"))
+                                                            {
+                                                                <button class="outlook-btn outlook-btn-primary" 
+                                                                    @onclick="() => EditUserRole(companyUser)">
+                                                                    <i class="oi oi-pencil"></i>
+                                                                </button>
+                                                                <button class="outlook-btn outlook-btn-danger" 
+                                                                    @onclick="() => ConfirmRemoveUser(companyUser)">
+                                                                    <i class="oi oi-trash"></i>
+                                                                </button>
+                                                            }
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (_showConfirmDialog)
+{
+    <div class="modal-backdrop show"></div>
+    <div class="modal show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@_confirmTitle</h5>
+                    <button type="button" class="close" @onclick="CancelConfirmation">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>@_confirmMessage</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="CancelConfirmation">Cancelar</button>
+                    <button type="button" class="outlook-btn outlook-btn-danger" @onclick="ConfirmAction">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showEditDialog)
+{
+    <div class="modal-backdrop show"></div>
+    <div class="modal show d-block" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambiar Rol</h5>
+                    <button type="button" class="close" @onclick="CancelEdit">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editRole">Rol:</label>
+                        <select class="form-control" id="editRole" @bind="_editRole">
+                            @foreach (var role in _availableRoles)
+                            {
+                                <option value="@role">@role</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn outlook-btn-secondary" @onclick="CancelEdit">Cancelar</button>
+                    <button type="button" class="outlook-btn outlook-btn-primary" @onclick="SaveRoleChange">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    
+    private Company _company;
+    private List<CompanyUser> _companyUsers = new List<CompanyUser>();
+    private UserAssignmentModel _newUserAssignment = new UserAssignmentModel();
+    private List<string> _availableRoles = new List<string> { "Admin", "User", "Guest" };
+    private string _errorMessage;
+    private bool _loading = true;
+    
+    // Confirmación de eliminación
+    private bool _showConfirmDialog = false;
+    private string _confirmTitle;
+    private string _confirmMessage;
+    private CompanyUser _selectedCompanyUser;
+    private Func<Task> _confirmCallback;
+
+    // Edición de rol
+    private bool _showEditDialog = false;
+    private string _editRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("document.title", "Gestión de usuarios en la empresa - ALGA System");
+            
+            _company = await CompanyService.GetCompanyByIdAsync(Id);
+            await LoadCompanyUsers();
+            
+            _loading = false;
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error al cargar datos: {ex.Message}";
+            _loading = false;
+        }
+    }
+
+    private async Task LoadCompanyUsers()
+    {
+        _companyUsers = await CompanyUserService.GetCompanyUsersAsync(Id);
+    }
+
+    private async Task AssignUser()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_newUserAssignment.Email))
+            {
+                _errorMessage = "Debe ingresar un email válido";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(_newUserAssignment.Role))
+            {
+                _errorMessage = "Debe seleccionar un rol para el usuario";
+                return;
+            }
+            
+            // Buscar usuario por email
+            var user = await CompanyUserService.GetUserByEmailAsync(_newUserAssignment.Email);
+            if (user == null)
+            {
+                _errorMessage = "El usuario con ese correo no existe en el sistema";
+                return;
+            }
+            
+            // Verificar si el usuario ya está asignado a esta empresa
+            var exists = await CompanyUserService.UserExistsInCompanyAsync(user.Id, Id);
+            if (exists)
+            {
+                _errorMessage = "Este usuario ya está asignado a esta empresa";
+                return;
+            }
+            
+            // Crear y guardar la asignación
+            var companyUser = new CompanyUser
+            {
+                Id = Guid.NewGuid(),
+                CompanyId = Id,
+                UserId = user.Id,
+                Role = _newUserAssignment.Role
+            };
+            
+            await CompanyUserService.AddCompanyUserAsync(companyUser);
+            
+            // Limpiar formulario y recargar datos
+            _newUserAssignment = new UserAssignmentModel();
+            await LoadCompanyUsers();
+            
+            await JSRuntime.InvokeVoidAsync("alert", "Usuario asignado correctamente a la empresa");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error al asignar usuario: {ex.Message}";
+        }
+    }
+
+    private void ConfirmRemoveUser(CompanyUser companyUser)
+    {
+        _selectedCompanyUser = companyUser;
+        _confirmTitle = "Eliminar usuario de la empresa";
+        _confirmMessage = $"¿Está seguro que desea eliminar al usuario {companyUser.User.UserName} de esta empresa?";
+        _confirmCallback = RemoveUser;
+        _showConfirmDialog = true;
+    }
+
+    private async Task RemoveUser()
+    {
+        try
+        {
+            if (_selectedCompanyUser != null)
+            {
+                await CompanyUserService.RemoveCompanyUserAsync(_selectedCompanyUser.Id);
+                await LoadCompanyUsers();
+                _showConfirmDialog = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error al eliminar: {ex.Message}";
+            _showConfirmDialog = false;
+        }
+    }
+
+    private void EditUserRole(CompanyUser companyUser)
+    {
+        _selectedCompanyUser = companyUser;
+        _editRole = companyUser.Role;
+        _showEditDialog = true;
+    }
+
+    private async Task SaveRoleChange()
+    {
+        try
+        {
+            if (_selectedCompanyUser != null && !string.IsNullOrEmpty(_editRole))
+            {
+                _selectedCompanyUser.Role = _editRole;
+                await CompanyUserService.UpdateCompanyUserAsync(_selectedCompanyUser);
+                await LoadCompanyUsers();
+                _showEditDialog = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error al actualizar rol: {ex.Message}";
+            _showEditDialog = false;
+        }
+    }
+
+    private void CancelConfirmation()
+    {
+        _showConfirmDialog = false;
+    }
+
+    private void CancelEdit()
+    {
+        _showEditDialog = false;
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/companies");
+    }
+
+    private async Task ConfirmAction()
+    {
+        if (_confirmCallback != null)
+        {
+            await _confirmCallback.Invoke();
+        }
+        _showConfirmDialog = false;
+    }
+    
+    // Método para verificar si el usuario tiene una política determinada
+    private bool IsUserAuthorized(string policyName)
+    {
+        // En un caso real, esto debería verificar con el servicio de autorización
+        // Para mantenerlo simple y evitar dependencias adicionales, asumiremos que el usuario tiene permisos
+        // ya que está viendo esta página que requiere ManageCompanyUsers
+        return true;
+        
+        // Implementación adecuada requeriría algo como:
+        // return await AuthorizationService.AuthorizeAsync(User, policyName);
+    }
+    
+    private string GetValidationMessage(Expression<Func<object>> expr)
+    {
+        var memberExpr = expr.Body as MemberExpression;
+        if (memberExpr == null)
+        {
+            var unaryExpr = expr.Body as UnaryExpression;
+            if (unaryExpr != null && unaryExpr.NodeType == ExpressionType.Convert)
+            {
+                memberExpr = unaryExpr.Operand as MemberExpression;
+            }
+        }
+        
+        if (memberExpr == null)
+            return string.Empty;
+            
+        var memberName = memberExpr.Member.Name;
+        
+        if (memberName == nameof(UserAssignmentModel.Email))
+        {
+            if (string.IsNullOrEmpty(_newUserAssignment.Email))
+                return "El email es requerido";
+            
+            var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!System.Text.RegularExpressions.Regex.IsMatch(_newUserAssignment.Email, emailPattern))
+                return "El email no tiene un formato válido";
+        }
+        
+        if (memberName == nameof(UserAssignmentModel.Role))
+        {
+            if (string.IsNullOrEmpty(_newUserAssignment.Role))
+                return "El rol es requerido";
+        }
+        
+        return string.Empty;
+    }
+    
+    // Modelo para el formulario de asignación
+    public class UserAssignmentModel
+    {
+        [Required(ErrorMessage = "El email es requerido")]
+        [EmailAddress(ErrorMessage = "El email no tiene un formato válido")]
+        public string Email { get; set; }
+        
+        [Required(ErrorMessage = "El rol es requerido")]
+        public string Role { get; set; }
+    }
+}

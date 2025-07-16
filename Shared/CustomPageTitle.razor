@@ -1,0 +1,17 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+
+@inject IJSRuntime JSRuntime
+
+@code {
+    [Parameter]
+    public string Title { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Title))
+        {
+            await JSRuntime.InvokeVoidAsync("document.title", Title);
+        }
+    }
+}

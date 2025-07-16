@@ -66,6 +66,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<ICompanyUserService, CompanyUserService>();
 
 // Handler para políticas por permiso
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
@@ -79,6 +80,7 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("DeleteUsers", policy => policy.Requirements.Add(new PermissionRequirement("Delete Users")));
     options.AddPolicy("ManageUserRoles", policy => policy.Requirements.Add(new PermissionRequirement("Manage User Roles")));
     options.AddPolicy("ManageUserPermissions", policy => policy.Requirements.Add(new PermissionRequirement("Manage User Permissions")));
+    options.AddPolicy("ManageUsers", policy => policy.Requirements.Add(new PermissionRequirement("Manage Users")));
 
     options.AddPolicy("ViewRoles", policy => policy.Requirements.Add(new PermissionRequirement("View Roles")));
     options.AddPolicy("CreateRoles", policy => policy.Requirements.Add(new PermissionRequirement("Create Roles")));
@@ -103,6 +105,12 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("CreateCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Create Companies")));
     options.AddPolicy("EditCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Edit Companies")));
     options.AddPolicy("DeleteCompanies", policy => policy.Requirements.Add(new PermissionRequirement("Delete Companies")));
+    
+    // Políticas para la gestión de usuarios en empresas
+    options.AddPolicy("ManageCompanyUsers", policy => policy.Requirements.Add(new PermissionRequirement("Manage Company Users")));
+    options.AddPolicy("ViewCompanyUsers", policy => policy.Requirements.Add(new PermissionRequirement("View Company Users")));
+    options.AddPolicy("AssignCompanyUsers", policy => policy.Requirements.Add(new PermissionRequirement("Assign Company Users")));
+    options.AddPolicy("RemoveCompanyUsers", policy => policy.Requirements.Add(new PermissionRequirement("Remove Company Users")));
 });
 
 // HttpClient

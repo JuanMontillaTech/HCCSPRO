@@ -36,8 +36,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFuaWVzXENvbXBhbnlGb3JtLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Proyectos/ALGA/ALGASystem/Pages/Companies/CompanyUsers.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFuaWVzXENvbXBhbnlVc2Vycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Proyectos/ALGA/ALGASystem/Pages/Companies/CompanyUsers_new.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFuaWVzXENvbXBhbnlVc2Vyc19uZXcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Proyectos/ALGA/ALGASystem/Pages/Companies/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFuaWVzXEluZGV4LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Proyectos/ALGA/ALGASystem/Pages/Companies/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcGFuaWVzXF9JbXBvcnRzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Proyectos/ALGA/ALGASystem/Pages/Counter.razor]
@@ -88,8 +100,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZ3MucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Proyectos/ALGA/ALGASystem/Pages/UserCompanies.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlckNvbXBhbmllcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Proyectos/ALGA/ALGASystem/Pages/UserManagement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlck1hbmFnZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Proyectos/ALGA/ALGASystem/Pages/Users.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlcnMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Proyectos/ALGA/ALGASystem/Pages/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Proyectos/ALGA/ALGASystem/Shared/CustomPageTitle.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEN1c3RvbVBhZ2VUaXRsZS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Proyectos/ALGA/ALGASystem/Shared/PageTitleComponent.razor]

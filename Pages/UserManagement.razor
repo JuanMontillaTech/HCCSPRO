@@ -1,0 +1,230 @@
+@page "/usermanagement"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components
+@using ALGASystem.Shared
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = "ViewUsers")]
+
+@inject IUserService UserService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Gestión de Usuarios - ALGA System</PageTitle>
+
+<div class="outlook-card">
+    <div class="outlook-card-header">
+        <h3>Gestión de Usuarios</h3>
+        <div class="outlook-card-header-actions">
+            <AuthorizeView Policy="CreateUsers">
+                <Authorized>
+                    <button class="outlook-btn outlook-btn-primary" @onclick="NavigateToCreate">
+                        <i class="oi oi-plus"></i> Nuevo Usuario
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+    <div class="outlook-card-body">
+        @if (_loading)
+        {
+            <div class="loading-container">
+                <div class="spinner"></div>
+                <p>Cargando usuarios...</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Roles</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in _users)
+                        {
+                            <tr>
+                                <td>@($"{user.FirstName} {user.LastName}")</td>
+                                <td>@user.Email</td>
+                                <td>@user.PhoneNumber</td>
+                                <td>
+                                    @if (_userRoles.ContainsKey(user.Id))
+                                    {
+                                        <span class="badge badge-pill badge-info">
+                                            @string.Join(", ", _userRoles[user.Id])
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <AuthorizeView Policy="ViewUsers">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-secondary"
+                                                    @onclick="() => NavigateToDetail(user.Id)">
+                                                    <i class="oi oi-eye"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="ManageCompanyUsers">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-info"
+                                                    @onclick="() => NavigateToCompanies(user.Id)">
+                                                    <i class="oi oi-briefcase"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="EditUsers">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-primary"
+                                                    @onclick="() => NavigateToEdit(user.Id)">
+                                                    <i class="oi oi-pencil"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                        <AuthorizeView Policy="DeleteUsers">
+                                            <Authorized>
+                                                <button class="outlook-btn outlook-btn-danger"
+                                                    @onclick="() => ConfirmDelete(user)">
+                                                    <i class="oi oi-trash"></i>
+                                                </button>
+                                            </Authorized>
+                                        </AuthorizeView>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@if (_showDeleteModal && _selectedUser != null)
+{
+    <div class="modal modal-open">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="close" @onclick="CloseDeleteModal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar al usuario @($"{_selectedUser.FirstName} {_selectedUser.LastName}") (@_selectedUser.Email)?</p>
+                    <p class="text-danger">Esta acción no se puede deshacer y eliminará todas las asignaciones a empresas.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="outlook-btn" @onclick="CloseDeleteModal">Cancelar</button>
+                    <button type="button" class="outlook-btn outlook-btn-danger" @onclick="DeleteUser">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ApplicationUser> _users = new List<ApplicationUser>();
+    private Dictionary<string, List<string>> _userRoles = new Dictionary<string, List<string>>();
+    private bool _loading = true;
+    private bool _showDeleteModal = false;
+    private ApplicationUser _selectedUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            _loading = true;
+            _users = (await UserService.GetAllUsersAsync()).ToList();
+            _userRoles.Clear();
+
+            foreach (var user in _users)
+            {
+                var roles = await UserService.GetUserRolesAsync(user.Id);
+                _userRoles[user.Id] = roles.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("console.error", $"Error al cargar usuarios: {ex.Message}");
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToCreate()
+    {
+        NavigationManager.NavigateTo("/users/new");
+    }
+
+    private void NavigateToDetail(string id)
+    {
+        NavigationManager.NavigateTo($"/users/{id}");
+    }
+
+    private void NavigateToEdit(string id)
+    {
+        NavigationManager.NavigateTo($"/users/edit/{id}");
+    }
+
+    private void NavigateToCompanies(string id)
+    {
+        NavigationManager.NavigateTo($"/usermanagement/{id}/companies");
+    }
+
+    private void ConfirmDelete(ApplicationUser user)
+    {
+        _selectedUser = user;
+        _showDeleteModal = true;
+    }
+
+    private void CloseDeleteModal()
+    {
+        _showDeleteModal = false;
+    }
+
+    private async Task DeleteUser()
+    {
+        if (_selectedUser != null)
+        {
+            try
+            {
+                var result = await UserService.DeleteUserAsync(_selectedUser.Id);
+                if (result.Succeeded)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Usuario eliminado correctamente.");
+                    await LoadUsers();
+                }
+                else
+                {
+                    string errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    await JSRuntime.InvokeVoidAsync("alert", $"Error al eliminar usuario: {errors}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+            }
+            finally
+            {
+                CloseDeleteModal();
+            }
+        }
+    }
+}
