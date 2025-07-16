@@ -139,3 +139,4 @@ C:\Proyectos\ALGA\ALGASystem\obj\Debug\net8.0\refint\ALGASystem.dll
 C:\Proyectos\ALGA\ALGASystem\obj\Debug\net8.0\ALGASystem.pdb
 C:\Proyectos\ALGA\ALGASystem\obj\Debug\net8.0\ALGASystem.genruntimeconfig.cache
 C:\Proyectos\ALGA\ALGASystem\obj\Debug\net8.0\ref\ALGASystem.dll
+C:\Proyectos\ALGA\ALGASystem\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

@@ -1,8 +1,8 @@
 # Archivos y carpetas específicos de .NET Core
-bin/
-obj/
-.vs/
-.vscode/
+ALGASystem/bin/
+ALGASystem/obj/
+ALGASystem/.vs/
+ALGASystem/.vscode/
 .idea/
 *.user
 *.userosscache
@@ -14,10 +14,10 @@ obj/
 *.publishsettings
 
 # Carpetas de publicación y compilación
-[Bb]in/
-[Oo]bj/
-[Dd]ebug/
-[Rr]elease/
+ALGASystem/bin/
+ALGASystem/obj/
+ALGASystem/Debug/
+ALGASystem/Release/
 x64/
 x86/
 [Aa][Rr][Mm]/

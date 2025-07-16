@@ -16,7 +16,7 @@
 @inject ICompanyUserService CompanyUserService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
-
+<PageTitle>Gestión de usuarios en la empresa - ALGA System</PageTitle>
 <div class="page-container">
     @if (_loading || _company == null)
     {
@@ -228,7 +228,7 @@
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("document.title", "Gestión de usuarios en la empresa - ALGA System");
+          
             
             _company = await CompanyService.GetCompanyByIdAsync(Id);
             await LoadCompanyUsers();
