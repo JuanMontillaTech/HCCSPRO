@@ -15,6 +15,7 @@
 @inject ICompanyService CompanyService
 @inject ICompanyUserService CompanyUserService
 @inject NavigationManager NavigationManager
+@inject IRoleService RoleService
 @inject IJSRuntime JSRuntime
 <PageTitle>Gestión de usuarios en la empresa - ALGA System</PageTitle>
 <div class="page-container">
@@ -205,14 +206,15 @@
 @code {
     [Parameter]
     public Guid Id { get; set; }
-    
+
     private Company _company;
+    private IEnumerable<ApplicationRole> _roles;
     private List<CompanyUser> _companyUsers = new List<CompanyUser>();
     private UserAssignmentModel _newUserAssignment = new UserAssignmentModel();
-    private List<string> _availableRoles = new List<string> { "Admin", "User", "Guest" };
+    private List<string> _availableRoles = new List<string>();
     private string _errorMessage;
     private bool _loading = true;
-    
+
     // Confirmación de eliminación
     private bool _showConfirmDialog = false;
     private string _confirmTitle;
@@ -228,11 +230,12 @@
     {
         try
         {
-          
-            
+
+
             _company = await CompanyService.GetCompanyByIdAsync(Id);
             await LoadCompanyUsers();
-            
+            await LoadRoles();
+
             _loading = false;
         }
         catch (Exception ex)
@@ -242,6 +245,15 @@
         }
     }
 
+    private async Task LoadRoles()
+    {
+        _roles = await RoleService.GetAllRolesAsync();
+        foreach (var rolItem in _roles)
+        {
+            _availableRoles.Add(rolItem.Name);
+
+        }
+    }
     private async Task LoadCompanyUsers()
     {
         _companyUsers = await CompanyUserService.GetCompanyUsersAsync(Id);
