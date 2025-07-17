@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ALGASystem")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6205e291eb3f81e33dadb517bdb6fec0eb4fd153")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5021e273c2dfe90aa9b24aac6cdd2a41b1576eeb")]
 [assembly: System.Reflection.AssemblyProductAttribute("ALGASystem")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ALGASystem")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

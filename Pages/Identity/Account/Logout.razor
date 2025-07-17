@@ -1,0 +1,59 @@
+@page "/Identity/Account/Logout"
+@layout EmptyLayout
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager NavigationManager
+@inject ALGASystem.Services.CustomAuthenticationStateProvider AuthStateProvider
+@inject ILogger<Logout> Logger
+
+<PageTitle>Cerrando sesión - ALGA System</PageTitle>
+
+<div class="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+            <div class="card shadow outlook-card">
+                <div class="card-header outlook-card-header text-center py-4">
+                    <h2 class="mb-0"><i class="oi oi-account-logout me-2"></i> Cerrando sesión</h2>
+                </div>
+                <div class="card-body outlook-card-body p-4 text-center">
+                    <div class="spinner-border text-primary mb-4" role="status">
+                        <span class="visually-hidden">Cerrando sesión...</span>
+                    </div>
+                    <p class="mb-0 fs-5">Cerrando su sesión, por favor espere...</p>
+                </div>
+                <div class="card-footer text-center py-3 text-muted">
+                    <small>&copy; @DateTime.Now.Year - ALGA System</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Registrar actividad de cierre de sesión
+            Logger.LogInformation("Usuario iniciando proceso de cierre de sesión");
+            
+            // Pequeña pausa para mostrar la página de carga
+            await Task.Delay(1000);
+            
+            // Cerrar la sesión usando el proveedor de autenticación personalizado
+            AuthStateProvider.MarkUserAsLoggedOut();
+            
+            Logger.LogInformation("Sesión cerrada correctamente, redirigiendo al login");
+            
+            // Redirigir al login
+            NavigationManager.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cerrar sesión");
+            NavigationManager.NavigateTo("/login", true);
+        }
+    }
+}
